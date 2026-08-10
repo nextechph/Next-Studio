@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Next Technology Quote Generator",
+  "description": "Professional Quotation Planner and interactive PDF generator with customized layouts, dynamic item pricing, validating empty fields, inspired by Next Technology aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
