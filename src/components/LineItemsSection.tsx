@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { QuotationItem, BrandingConfig } from '../types';
 import { SERVICE_PRESETS, ServicePreset } from '../data/presets';
-import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers } from 'lucide-react';
+import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import GlassSelect from './GlassSelect';
 
@@ -85,45 +85,73 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {STUDENT_ADDONS.map((addon, i) => {
               const isChecked = items.some((item) => item.id === addon.id);
+              const toggleAddon = () => {
+                if (isChecked) {
+                  onUpdateItems(items.filter((item) => item.id !== addon.id));
+                } else {
+                  onUpdateItems([
+                    ...items,
+                    {
+                      id: addon.id,
+                      title: addon.title,
+                      description: addon.description,
+                      unitPrice: addon.price,
+                      quantity: 1,
+                      category: addon.category,
+                    },
+                  ]);
+                }
+              };
+
               return (
-                <motion.label
+                <motion.div
                   key={addon.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  htmlFor={addon.id}
-                  className={`p-4 rounded-2xl text-left cursor-pointer select-none transition-all flex items-center justify-between glass-panel ${
-                    isChecked ? 'border-white/30 bg-white/12 shadow-xl' : 'border-white/10'
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={toggleAddon}
+                  className={`p-4 rounded-2xl text-left cursor-pointer select-none transition-all duration-300 flex items-center justify-between glass-panel relative ${
+                    isChecked
+                      ? 'border-white/40 bg-white/12 shadow-[0_4px_20px_rgba(255,255,255,0.08)]'
+                      : 'border-white/10 hover:border-white/20 bg-white/03'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id={addon.id}
-                      checked={isChecked}
-                      onChange={(e) => {
-                        if (e.target.checked)
-                          onUpdateItems([
-                            ...items,
-                            {
-                              id: addon.id,
-                              title: addon.title,
-                              description: addon.description,
-                              unitPrice: addon.price,
-                              quantity: 1,
-                              category: addon.category,
-                            },
-                          ]);
-                        else onUpdateItems(items.filter((item) => item.id !== addon.id));
+                    {/* Custom 3D Animated Checkbox */}
+                    <motion.div
+                      animate={{
+                        scale: isChecked ? [1, 1.25, 1] : 1,
+                        backgroundColor: isChecked ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.06)',
+                        borderColor: isChecked ? 'rgba(255, 255, 255, 1)' : 'rgba(255, 255, 255, 0.2)',
                       }}
-                      className="h-4 w-4 rounded-md accent-white cursor-pointer"
-                    />
-                    <span className={`text-xs font-semibold ${isChecked ? 'text-white' : 'text-white/70'}`}>
+                      transition={{ duration: 0.25 }}
+                      className="h-5 w-5 rounded-lg border flex items-center justify-center shadow-inner shrink-0"
+                    >
+                      <AnimatePresence>
+                        {isChecked && (
+                          <motion.div
+                            initial={{ scale: 0, rotate: -45 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0, rotate: 45 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                          >
+                            <Check className="h-3.5 w-3.5 text-black stroke-[3.5]" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+
+                    <span className={`text-xs font-semibold transition-colors ${isChecked ? 'text-white font-bold' : 'text-white/70'}`}>
                       {addon.title}
                     </span>
                   </div>
-                  <span className="font-mono text-xs font-bold text-white/50">+₱{addon.price.toLocaleString()}</span>
-                </motion.label>
+
+                  <span className={`font-mono text-xs font-bold transition-colors ${isChecked ? 'text-white font-extrabold' : 'text-white/50'}`}>
+                    +₱{addon.price.toLocaleString()}
+                  </span>
+                </motion.div>
               );
             })}
           </div>
@@ -183,7 +211,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
       )}
 
       {/* ── 2. UNIFIED LIQUID GLASS DELIVERABLES MAIN CARD ──────── */}
-      <div className="glass-panel p-6 rounded-3xl border border-white/12 shadow-2xl flex flex-col gap-5" id="deliverables-main-card">
+      <div className="glass-panel p-3.5 sm:p-6 rounded-3xl border border-white/12 shadow-2xl flex flex-col gap-4 sm:gap-5" id="deliverables-main-card">
         
         {/* Header Bar */}
         <div className="flex items-center justify-between flex-wrap gap-2 pb-4 border-b border-white/10">
@@ -239,7 +267,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
             </div>
           </div>
         ) : (
-          /* Sleek Structured 2-Row Deliverable Cards */
+          /* Mobile-Optimized Deliverables List Grid */
           <div className="flex flex-col gap-4" id="compact-deliverables-list">
             <AnimatePresence>
               {filteredItems.map((item, idx) => (
@@ -249,128 +277,127 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: -6 }}
                   transition={{ delay: idx * 0.03, duration: 0.15 }}
-                  className="glass-panel p-4 sm:p-5 rounded-2xl flex flex-col gap-3.5 border border-white/12 hover:border-white/25 transition-all shadow-xl group"
+                  className="glass-panel p-3.5 sm:p-5 rounded-2xl flex flex-col gap-3 border border-white/12 hover:border-white/20 transition-all shadow-xl group bg-white/03"
                 >
-                  {/* Top Row: Service Title & Structured Controls Bar */}
-                  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3.5">
-                    {/* Service Title Input */}
-                    <div className="flex-1 min-w-[200px] flex flex-col gap-1">
-                      <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 flex items-center justify-between">
-                        <span>SERVICE TITLE #{idx + 1}</span>
+                  {/* Top Bar: Item Title Badge & Delete Action */}
+                  <div className="flex items-center justify-between pb-1 border-b border-white/06">
+                    <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/60 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      SERVICE TITLE #{idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      className="text-white/30 hover:text-rose-400 p-1 rounded-lg transition hover:bg-rose-500/10 cursor-pointer flex items-center gap-1 text-[9px] font-mono font-bold"
+                      title="Remove deliverable"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </button>
+                  </div>
+
+                  {/* Service Title Input */}
+                  <div className="w-full">
+                    <input
+                      type="text"
+                      placeholder="e.g. Custom React Web Application Setup"
+                      value={item.title}
+                      onChange={(e) => updateItemField(item.id, 'title', e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addBlankItem()}
+                      className="w-full font-sans font-bold text-xs sm:text-sm text-white glass-input bg-white/05 border border-white/12 focus:border-white/30 px-3.5 py-2 rounded-xl transition-all placeholder:text-white/25 outline-none shadow-inner"
+                    />
+                  </div>
+
+                  {/* 12-Column Responsive Controls Grid (Category, Rate, Qty, Subtotal) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-12 gap-2.5 items-end pt-1">
+                    {/* Category Select */}
+                    <div className="col-span-2 sm:col-span-4 flex flex-col gap-1">
+                      <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50">
+                        CATEGORY
                       </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Custom React Web Application Setup"
-                        value={item.title}
-                        onChange={(e) => updateItemField(item.id, 'title', e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addBlankItem()}
-                        className="w-full font-sans font-bold text-xs text-white glass-input bg-white/05 border border-white/12 focus:border-white/30 px-3.5 py-2 rounded-xl transition-all placeholder:text-white/25 outline-none shadow-inner"
+                      <GlassSelect
+                        value={item.category}
+                        onChange={(val) => updateItemField(item.id, 'category', val)}
+                        options={categories.slice(1).map((cat) => ({ value: cat, label: cat }))}
+                        className="py-1.5 text-xs w-full"
+                        position="bottom"
+                        align="left"
                       />
                     </div>
 
-                    {/* Right Controls Row (Category, Rate, Qty, Subtotal, Delete) */}
-                    <div className="flex items-end gap-2.5 shrink-0 flex-wrap justify-between sm:justify-end">
-                      {/* Category Select */}
-                      <div className="flex flex-col gap-1 w-[140px]">
-                        <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50">
-                          CATEGORY
-                        </label>
-                        <GlassSelect
-                          value={item.category}
-                          onChange={(val) => updateItemField(item.id, 'category', val)}
-                          options={categories.slice(1).map((cat) => ({ value: cat, label: cat }))}
-                          className="py-1.5 text-xs"
-                          position="bottom"
-                          align="left"
+                    {/* Rate Input */}
+                    <div className="col-span-1 sm:col-span-3 flex flex-col gap-1">
+                      <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50">
+                        RATE (₱)
+                      </label>
+                      <div className="flex items-center glass-input px-2.5 py-1.5 rounded-xl border border-white/12 focus-within:border-white/30 bg-white/04 shadow-inner">
+                        <span className="text-white/50 text-xs font-mono mr-1">₱</span>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={item.unitPrice || ''}
+                          onChange={(e) => updateItemField(item.id, 'unitPrice', e.target.value === '' ? 0 : e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && addBlankItem()}
+                          className="font-mono font-bold text-right text-xs text-white bg-transparent outline-none w-full"
                         />
                       </div>
+                    </div>
 
-                      {/* Rate Input */}
-                      <div className="flex flex-col gap-1 w-24">
-                        <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 text-right">
-                          RATE (₱)
-                        </label>
-                        <div className="flex items-center glass-input px-2.5 py-1.5 rounded-xl border border-white/12 focus-within:border-white/30 bg-white/04 shadow-inner">
-                          <span className="text-white/50 text-xs font-mono mr-1">₱</span>
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            value={item.unitPrice || ''}
-                            onChange={(e) => updateItemField(item.id, 'unitPrice', e.target.value === '' ? 0 : e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && addBlankItem()}
-                            className="font-mono font-bold text-right text-xs text-white bg-transparent outline-none w-full"
-                          />
-                        </div>
-                      </div>
-
-                      {/* 3D Liquid Glass Qty Stepper */}
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 text-center">
-                          QTY
-                        </label>
-                        <div className="flex items-center gap-1 glass-panel p-1 rounded-xl border border-white/12 bg-white/05 shadow-inner">
-                          <button
-                            type="button"
-                            onClick={() => updateItemField(item.id, 'quantity', Math.max(1, item.quantity - 1))}
-                            className="h-6 w-6 rounded-lg glass-btn flex items-center justify-center text-xs font-black text-white/80 hover:text-white hover:bg-white/20 transition active:scale-90 cursor-pointer border border-white/10"
-                            title="Decrease quantity"
-                          >
-                            -
-                          </button>
-                          <input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => updateItemField(item.id, 'quantity', Math.max(1, Number(e.target.value) || 1))}
-                            className="font-mono font-bold text-center text-xs text-white bg-transparent outline-none w-7"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => updateItemField(item.id, 'quantity', item.quantity + 1)}
-                            className="h-6 w-6 rounded-lg glass-btn flex items-center justify-center text-xs font-black text-white/80 hover:text-white hover:bg-white/20 transition active:scale-90 cursor-pointer border border-white/10"
-                            title="Increase quantity"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Subtotal Display */}
-                      <div className="flex flex-col gap-1 items-end">
-                        <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 text-right">
-                          SUBTOTAL
-                        </label>
-                        <span className="font-mono font-extrabold text-xs text-white px-2.5 py-1.5 rounded-xl glass-panel border border-white/12 bg-white/08 shadow-inner min-w-[70px] text-right">
-                          ₱{(item.unitPrice * item.quantity).toLocaleString()}
-                        </span>
-                      </div>
-
-                      {/* Delete Action Button */}
-                      <div className="pb-0.5">
+                    {/* Qty Stepper */}
+                    <div className="col-span-1 sm:col-span-2 flex flex-col gap-1">
+                      <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 text-center sm:text-left">
+                        QTY
+                      </label>
+                      <div className="flex items-center justify-between gap-1 glass-panel p-1 rounded-xl border border-white/12 bg-white/05 shadow-inner">
                         <button
                           type="button"
-                          onClick={() => removeItem(item.id)}
-                          className="text-white/40 hover:text-rose-400 p-2 rounded-xl transition hover:bg-rose-500/10 cursor-pointer"
-                          title="Remove item"
+                          onClick={() => updateItemField(item.id, 'quantity', Math.max(1, item.quantity - 1))}
+                          className="h-6 w-6 rounded-lg glass-btn flex items-center justify-center text-xs font-black text-white/80 hover:text-white hover:bg-white/20 transition active:scale-90 cursor-pointer border border-white/10"
+                          title="Decrease quantity"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateItemField(item.id, 'quantity', Math.max(1, Number(e.target.value) || 1))}
+                          className="font-mono font-bold text-center text-xs text-white bg-transparent outline-none w-7"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateItemField(item.id, 'quantity', item.quantity + 1)}
+                          className="h-6 w-6 rounded-lg glass-btn flex items-center justify-center text-xs font-black text-white/80 hover:text-white hover:bg-white/20 transition active:scale-90 cursor-pointer border border-white/10"
+                          title="Increase quantity"
+                        >
+                          +
                         </button>
                       </div>
                     </div>
+
+                    {/* Subtotal Display */}
+                    <div className="col-span-2 sm:col-span-3 flex flex-col gap-1 items-end pt-1 sm:pt-0">
+                      <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 text-right">
+                        SUBTOTAL
+                      </label>
+                      <span className="font-mono font-extrabold text-xs text-white px-3 py-1.5 rounded-xl glass-panel border border-white/12 bg-white/08 shadow-inner w-full text-right">
+                        ₱{(item.unitPrice * item.quantity).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Bottom Row: Full Width Scope Description Textarea */}
-                  <div className="flex flex-col gap-1 pt-1 border-t border-white/06">
+                  {/* Scope Description Textarea */}
+                  <div className="flex flex-col gap-1 pt-1.5 border-t border-white/06">
                     <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50">
                       SCOPE & DELIVERABLES SPECIFICATION
                     </label>
                     <textarea
                       rows={2}
-                      placeholder="Detailed technical scope, deliverables, architecture specifications, or timelines..."
+                      placeholder="Detailed technical scope, deliverables, architecture specifications..."
                       value={item.description}
                       onChange={(e) => updateItemField(item.id, 'description', e.target.value)}
-                      className="w-full text-xs text-white/80 glass-input bg-white/03 border border-white/10 focus:border-white/25 px-3.5 py-2 rounded-xl transition-all placeholder:text-white/25 outline-none resize-none min-h-[44px] leading-relaxed shadow-inner"
+                      className="w-full text-xs text-white/80 glass-input bg-white/03 border border-white/10 focus:border-white/25 px-3 py-2 rounded-xl transition-all placeholder:text-white/25 outline-none resize-none min-h-[42px] leading-relaxed shadow-inner"
                     />
                   </div>
                 </motion.div>
@@ -380,12 +407,14 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
         )}
 
         {/* Footer Bar & Add Button */}
-        <div className="pt-3.5 border-t border-white/10 flex items-center justify-between flex-wrap gap-2">
-          <span className="text-[10px] font-mono text-white/40">Press Enter on inputs or click button to insert line</span>
+        <div className="pt-3.5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-3">
+          <span className="text-[10px] font-mono text-white/40 text-center sm:text-left">
+            Press Enter on inputs or click button to insert line
+          </span>
           <button
             type="button"
             onClick={addBlankItem}
-            className="glass-btn-primary px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-widest flex items-center gap-1.5 cursor-pointer shadow-xl"
+            className="glass-btn-primary w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-widest flex items-center justify-center gap-1.5 cursor-pointer shadow-xl"
             id="add-deliverable-line-btn"
           >
             <Plus className="h-4 w-4 text-black" />
@@ -411,33 +440,57 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
               <button
                 type="button"
                 onClick={() => onUpdateConfig({ enableDiscount: !config.enableDiscount })}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-white/20 transition-colors duration-200 ease-in-out focus:outline-none ${
-                  config.enableDiscount ? 'bg-white shadow-lg' : 'bg-white/10'
+                className={`relative inline-flex items-center h-6 w-11 shrink-0 cursor-pointer rounded-full px-0.5 border transition-all duration-300 ease-in-out focus:outline-none ${
+                  config.enableDiscount
+                    ? 'bg-white/20 border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.2),_inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md'
+                    : 'bg-white/06 border-white/12 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] backdrop-blur-sm hover:border-white/25'
                 }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow-md ring-0 transition duration-200 ease-in-out ${
-                    config.enableDiscount ? 'translate-x-4 bg-black' : 'translate-x-0 bg-white/40'
+                  className={`pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full transition-transform duration-300 ease-in-out ${
+                    config.enableDiscount
+                      ? 'translate-x-5 bg-gradient-to-b from-white via-zinc-100 to-zinc-300 shadow-[0_2px_6px_rgba(0,0,0,0.6),_inset_0_1px_0_rgba(255,255,255,0.9)] border border-white'
+                      : 'translate-x-0 bg-gradient-to-b from-white/40 to-white/15 border border-white/20 shadow-sm'
                   }`}
                 />
               </button>
             </div>
-            {config.enableDiscount ? (
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="0"
-                  value={config.discount || ''}
-                  onChange={(e) => onUpdateConfig({ discount: Number(e.target.value) || 0 })}
-                  className="w-full px-3 py-1.5 text-xs font-mono rounded-xl glass-input border border-white/12 bg-white/05 text-white outline-none"
-                />
-                <span className="text-xs font-mono text-white/50">%</span>
-              </div>
-            ) : (
-              <span className="text-[10px] text-white/30 italic">Discount disabled</span>
-            )}
+            <AnimatePresence mode="wait">
+              {config.enableDiscount ? (
+                <motion.div
+                  key="discount-active"
+                  initial={{ opacity: 0, height: 0, rotateX: -25, scale: 0.94, transformOrigin: 'top' }}
+                  animate={{ opacity: 1, height: 'auto', rotateX: 0, scale: 1 }}
+                  exit={{ opacity: 0, height: 0, rotateX: 25, scale: 0.94 }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                  style={{ perspective: 1000 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="0"
+                      value={config.discount || ''}
+                      onChange={(e) => onUpdateConfig({ discount: Number(e.target.value) || 0 })}
+                      className="w-full px-3 py-1.5 text-xs font-mono rounded-xl glass-input border border-white/12 bg-white/05 text-white outline-none focus:border-white/30 transition-all shadow-inner"
+                    />
+                    <span className="text-xs font-mono text-white/50">%</span>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="discount-disabled"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-[10px] text-white/30 italic">Discount disabled</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Tax Liquid Glass Card */}
@@ -449,33 +502,57 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
               <button
                 type="button"
                 onClick={() => onUpdateConfig({ enableTax: !config.enableTax })}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-white/20 transition-colors duration-200 ease-in-out focus:outline-none ${
-                  config.enableTax ? 'bg-white shadow-lg' : 'bg-white/10'
+                className={`relative inline-flex items-center h-6 w-11 shrink-0 cursor-pointer rounded-full px-0.5 border transition-all duration-300 ease-in-out focus:outline-none ${
+                  config.enableTax
+                    ? 'bg-white/20 border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.2),_inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md'
+                    : 'bg-white/06 border-white/12 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] backdrop-blur-sm hover:border-white/25'
                 }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow-md ring-0 transition duration-200 ease-in-out ${
-                    config.enableTax ? 'translate-x-4 bg-black' : 'translate-x-0 bg-white/40'
+                  className={`pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full transition-transform duration-300 ease-in-out ${
+                    config.enableTax
+                      ? 'translate-x-5 bg-gradient-to-b from-white via-zinc-100 to-zinc-300 shadow-[0_2px_6px_rgba(0,0,0,0.6),_inset_0_1px_0_rgba(255,255,255,0.9)] border border-white'
+                      : 'translate-x-0 bg-gradient-to-b from-white/40 to-white/15 border border-white/20 shadow-sm'
                   }`}
                 />
               </button>
             </div>
-            {config.enableTax ? (
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="0"
-                  value={config.taxRate || ''}
-                  onChange={(e) => onUpdateConfig({ taxRate: Number(e.target.value) || 0 })}
-                  className="w-full px-3 py-1.5 text-xs font-mono rounded-xl glass-input border border-white/12 bg-white/05 text-white outline-none"
-                />
-                <span className="text-xs font-mono text-white/50">%</span>
-              </div>
-            ) : (
-              <span className="text-[10px] text-white/30 italic">Tax disabled (0%)</span>
-            )}
+            <AnimatePresence mode="wait">
+              {config.enableTax ? (
+                <motion.div
+                  key="tax-active"
+                  initial={{ opacity: 0, height: 0, rotateX: -25, scale: 0.94, transformOrigin: 'top' }}
+                  animate={{ opacity: 1, height: 'auto', rotateX: 0, scale: 1 }}
+                  exit={{ opacity: 0, height: 0, rotateX: 25, scale: 0.94 }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                  style={{ perspective: 1000 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="0"
+                      value={config.taxRate || ''}
+                      onChange={(e) => onUpdateConfig({ taxRate: Number(e.target.value) || 0 })}
+                      className="w-full px-3 py-1.5 text-xs font-mono rounded-xl glass-input border border-white/12 bg-white/05 text-white outline-none focus:border-white/30 transition-all shadow-inner"
+                    />
+                    <span className="text-xs font-mono text-white/50">%</span>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="tax-disabled"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <span className="text-[10px] text-white/30 italic">Tax disabled (0%)</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Quote Expiry Days Liquid Glass Card */}

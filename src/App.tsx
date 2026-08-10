@@ -180,9 +180,9 @@ export default function App() {
         backgroundSize: '64px 64px',
       }} />
 
-      {/* ══ FULL HEIGHT LEFT SIDEBAR ════════════════════════ */}
+      {/* ══ FULL HEIGHT LEFT SIDEBAR (Desktop >=1024px) ════════════════════════ */}
       <aside
-        className="fixed top-0 left-0 bottom-0 w-[250px] xl:w-[260px] z-30 flex flex-col justify-between p-5 sidebar-glass border-r border-white/10 overflow-y-auto"
+        className="hidden lg:flex fixed top-0 left-0 bottom-0 w-[250px] xl:w-[260px] z-30 flex-col justify-between p-5 sidebar-glass border-r border-white/10 overflow-y-auto"
         id="full-left-sidebar"
       >
         <div className="flex flex-col gap-6">
@@ -191,8 +191,8 @@ export default function App() {
           <div className="flex items-center gap-3 pb-4 border-b border-white/08">
             <NextLogo className="h-9 w-9 text-white shrink-0 drop-shadow-md" />
             <div className="flex flex-col leading-none min-w-0">
-              <span className="font-display font-black text-base tracking-tight text-white truncate">NEXT QUOTATION</span>
-              <span className="text-[9px] font-mono text-white/30 tracking-[0.2em] uppercase mt-1 truncate">Quotation Studio</span>
+              <span className="font-display font-black text-base tracking-tight text-white truncate">NEXT STUDIO</span>
+              <span className="text-[9px] font-mono text-white/30 tracking-[0.2em] uppercase mt-1 truncate">PROJECT COSTING SYSTEM</span>
             </div>
           </div>
 
@@ -270,8 +270,8 @@ export default function App() {
         </div>
       </aside>
 
-      {/* ══ MAIN WORKSPACE CONTENT CONTAINER (CENTERED BETWEEN SIDEBARS) ════ */}
-      <div className="ml-[250px] xl:ml-[260px] mr-[290px] xl:mr-[310px] p-6 lg:p-8 relative z-10" id="main-content-wrapper">
+      {/* ══ MAIN WORKSPACE CONTENT CONTAINER (RESPONSIVE FOR MOBILE & DESKTOP) ════ */}
+      <div className="ml-0 lg:ml-[250px] xl:ml-[260px] mr-0 xl:mr-[310px] p-3 sm:p-6 lg:p-8 relative z-10 pb-36 lg:pb-28 xl:pb-8" id="main-content-wrapper">
         <div className="max-w-5xl mx-auto flex flex-col gap-6" id="main-workspace-card-container">
           <div className="glass-card-static p-6 sm:p-8 rounded-3xl relative overflow-visible" id="main-workspace-card">
             
@@ -386,9 +386,9 @@ export default function App() {
         </div>
       </div>
 
-      {/* ══ FULL HEIGHT RIGHT FREEZE SIDEBAR (LIVE QUOTE SUMMARY) ═════════ */}
+      {/* ══ FULL HEIGHT RIGHT FREEZE SIDEBAR (Desktop >=1280px) ═════════ */}
       <aside
-        className="fixed top-0 right-0 bottom-0 w-[290px] xl:w-[310px] z-30 flex flex-col justify-between p-5 sidebar-glass border-l border-white/10 overflow-y-auto"
+        className="hidden xl:flex fixed top-0 right-0 bottom-0 w-[290px] xl:w-[310px] z-30 flex-col justify-between p-5 sidebar-glass border-l border-white/10 overflow-y-auto"
         id="full-right-freeze-sidebar"
       >
         <div className="flex flex-col gap-4">
@@ -511,10 +511,100 @@ export default function App() {
             className="glass-btn-primary w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer shadow-xl"
             id="live-quote-export-btn"
           >
-            <Sparkles className="h-4 w-4 text-black" /> Generate PDF
+            Generate PDF
           </button>
         </div>
       </aside>
+
+      {/* ══ MOBILE LIQUID GLASS BOTTOM NAVIGATION BAR (<1024px) ════ */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-2.5 bg-black/92 backdrop-blur-2xl border-t border-white/12 flex flex-col gap-2 shadow-[0_-10px_30px_rgba(0,0,0,0.9)]"
+        id="mobile-bottom-nav-bar"
+      >
+        {/* Top Summary & Quick Actions Row */}
+        <div className="flex items-center justify-between gap-3 px-1 pb-1.5 border-b border-white/08">
+          <div className="flex flex-col leading-none">
+            <span className="text-[8px] font-mono font-bold uppercase tracking-widest text-white/35">Total Estimate</span>
+            <span className="font-mono font-black text-xs sm:text-sm text-white mt-0.5">
+              ₱{Math.round(total).toLocaleString()}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePreview}
+              className="glass-btn-ghost px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider text-white border border-white/20 flex items-center gap-1 cursor-pointer"
+            >
+              <Eye className="h-3 w-3 text-white/80" /> Preview
+            </button>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              className="glass-btn-primary px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-black flex items-center justify-center gap-1 cursor-pointer shadow-md"
+            >
+              Generate PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom 4-Tab Navigation Bar */}
+        <div className="grid grid-cols-4 gap-1 select-none" id="mobile-bottom-tabs-grid">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activePanel === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActivePanel(tab.id)}
+                className={`flex flex-col items-center justify-center py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer relative ${
+                  isActive
+                    ? 'bg-white text-black font-extrabold shadow-lg scale-[1.02]'
+                    : 'text-white/40 hover:text-white hover:bg-white/05 font-medium'
+                }`}
+                id={`mobile-bottom-tab-${tab.id}`}
+              >
+                <div className="relative">
+                  <Icon className={`h-4 w-4 mb-0.5 ${isActive ? 'text-black' : 'text-white/40'}`} />
+                  {tab.id === 'history' && history.length > 0 && (
+                    <span className={`absolute -top-1 -right-2 text-[7.5px] font-mono font-black px-1 rounded-full ${
+                      isActive ? 'bg-black text-white' : 'bg-white/30 text-white'
+                    }`}>
+                      {history.length}
+                    </span>
+                  )}
+                </div>
+                <span className="leading-none tracking-tight">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ══ TABLET ONLY BOTTOM QUICK BAR (1024px - 1279px) ════ */}
+      <div className="hidden lg:flex xl:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-black/90 backdrop-blur-2xl border-t border-white/12 items-center justify-between gap-3 px-6 shadow-2xl" id="tablet-quick-action-bar">
+        <div className="flex flex-col leading-none">
+          <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-white/35">Total Estimate</span>
+          <span className="font-mono font-black text-sm text-white mt-1">₱{Math.round(total).toLocaleString()}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handlePreview}
+            className="glass-btn-ghost px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider text-white border border-white/20 flex items-center gap-1.5 cursor-pointer shadow-sm"
+          >
+            <Eye className="h-3.5 w-3.5 text-white/80" /> Preview
+          </button>
+          <button
+            type="button"
+            onClick={handleGenerate}
+            className="glass-btn-primary px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest text-black flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
+          >
+            Generate PDF
+          </button>
+        </div>
+      </div>
 
       {/* ══ PDF PREVIEW OVERLAY ═════════════════════════════ */}
       <AnimatePresence>
@@ -527,25 +617,29 @@ export default function App() {
             className="fixed inset-0 bg-black/92 backdrop-blur-3xl z-50 flex flex-col overflow-y-auto"
             id="pdf-preview-overlay"
           >
-            <div className="sticky top-0 glass-panel border-b border-white/08 p-4 flex items-center justify-between px-6 z-10 backdrop-blur-2xl">
+            {/* Modal Top Header Bar (Mobile Optimized) */}
+            <div className="sticky top-0 glass-panel border-b border-white/08 p-3 sm:p-4 flex items-center justify-between px-3 sm:px-6 z-10 backdrop-blur-2xl gap-2">
               <button
                 type="button"
                 onClick={() => setIsPreviewOpen(false)}
-                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/50 hover:text-white glass-pill px-4 py-2 rounded-xl transition cursor-pointer"
+                className="flex items-center gap-1.5 text-[10px] sm:text-xs font-extrabold uppercase tracking-widest text-white/70 hover:text-white glass-pill px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition cursor-pointer shrink-0 border border-white/12"
               >
-                <X className="h-4 w-4" /> Return to Editor
+                <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Return to Editor</span>
               </button>
-              <div className="flex items-center gap-2 glass-pill px-4 py-1.5 rounded-xl">
-                <span className={`h-2 w-2 rounded-full ${pdfModalMode === 'generate' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
-                <span className={`font-mono text-xs font-bold uppercase tracking-wider ${pdfModalMode === 'generate' ? 'text-emerald-400' : 'text-amber-300'}`}>
-                  {pdfModalMode === 'generate' ? 'Export Ready · Download Enabled' : 'PDF Preview · Read Only'}
+
+              <div className="flex items-center gap-1.5 glass-pill px-3 py-1 sm:px-4 sm:py-1.5 rounded-xl border border-white/10 shrink-0">
+                <span className={`h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full ${pdfModalMode === 'generate' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
+                <span className={`font-mono text-[9.5px] sm:text-xs font-bold uppercase tracking-wider ${pdfModalMode === 'generate' ? 'text-emerald-400' : 'text-amber-300'}`}>
+                  {pdfModalMode === 'generate' ? 'Export Ready' : 'PDF Preview · Read Only'}
                 </span>
               </div>
-              <span className="font-display text-xs text-white/30 font-bold uppercase tracking-widest">Next Quotation</span>
+
+              <span className="hidden md:inline-block font-display text-xs text-white/30 font-bold uppercase tracking-widest shrink-0">NEXT STUDIO</span>
             </div>
 
-            <div className="flex-1 py-8 px-4 sm:px-6">
-              <div className="max-w-4xl mx-auto">
+            <div className="flex-1 py-4 sm:py-8 px-3 sm:px-6">
+              <div className="max-w-6xl mx-auto w-full">
                 <PDFPreview
                   clientDetails={client}
                   items={items}

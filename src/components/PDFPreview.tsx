@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ClientDetails, QuotationItem, BrandingConfig, BrandingTheme } from '../types';
-import { Download, Printer, Copy, Check, FileText, Lock, Sparkles, Building2, User2, MailCheck } from 'lucide-react';
+import { Download, Printer, Copy, Check, FileText, Lock, Sparkles, Building2, User2, MailCheck, ZoomIn, ZoomOut } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -156,6 +156,10 @@ export default function PDFPreview({
   const activeTheme = config.theme || 'next-light';
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [zoomScale, setZoomScale] = useState<number>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) return 0.46;
+    return 1.0;
+  });
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
 
   // Totals calculations
@@ -210,6 +214,13 @@ export default function PDFPreview({
         logging: false,
         backgroundColor: currentStyle.bgColorHex,
         onclone: (clonedDoc) => {
+          // Force exact A4 760px canvas width on cloned document for html2canvas
+          const clonedSheet = clonedDoc.getElementById('billing-print-sheet');
+          if (clonedSheet) {
+            clonedSheet.style.width = '760px';
+            clonedSheet.style.maxWidth = '760px';
+          }
+
           // 1. Process all elements with inline style attributes containing 'oklch' or 'oklab'
           clonedDoc.querySelectorAll('[style]').forEach((el) => {
             const inlineStyle = el.getAttribute('style');
@@ -377,7 +388,7 @@ export default function PDFPreview({
       accentText: 'text-stone-600',
       boldText: 'text-stone-900 font-semibold',
       badgeBg: 'bg-stone-100 border border-stone-800 text-stone-900',
-      headerClass: 'bg-stone-100/50 border-b-2 border-stone-800 pb-5',
+      headerClass: 'bg-stone-100/80 p-5 rounded-2xl border border-stone-800',
       headerBoldText: 'text-stone-900',
       headerMetaText: 'text-stone-600',
       footerText: 'text-stone-500',
@@ -459,15 +470,48 @@ export default function PDFPreview({
 
       {/* 2. Realistic Printable Box Frame (A4 Aspect Ratio: ~794px width) */}
       <div 
-        className="mx-auto w-full max-w-[800px] bg-zinc-100 p-3 sm:p-5 overflow-x-auto shadow-inner border border-zinc-200 relative group rounded-2xl"
+        className="mx-auto w-full max-w-5xl bg-zinc-100 p-4 sm:p-6 overflow-x-auto md:overflow-x-visible shadow-2xl border border-zinc-200 relative group rounded-3xl"
         id="pdf-viewprint-stage"
       >
-        {/* Inline Header & Action Buttons */}
+        {/* Inline Header & Action Buttons & Zoom Controls */}
         <div className="flex items-center justify-between pb-3 px-1 flex-wrap gap-2">
-          <span className="text-[9px] tracking-[0.18em] font-mono text-zinc-600 select-none uppercase font-extrabold flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Live PDF Document Sheet
-          </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-[9px] tracking-[0.18em] font-mono text-zinc-600 select-none uppercase font-extrabold flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              Live PDF Document Sheet
+            </span>
+
+            {/* Interactive Zoom Controller Pill */}
+            <div className="flex items-center gap-1 bg-zinc-200/90 p-1 rounded-xl border border-zinc-300 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setZoomScale((prev) => Math.max(0.32, prev - 0.08))}
+                className="p-1 rounded-lg hover:bg-white text-zinc-700 transition cursor-pointer"
+                title="Zoom Out (-)"
+              >
+                <ZoomOut className="h-3.5 w-3.5" />
+              </button>
+              <span className="font-mono text-[9.5px] font-extrabold text-zinc-800 px-1.5 min-w-[38px] text-center select-none">
+                {Math.round(zoomScale * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoomScale((prev) => Math.min(1.4, prev + 0.08))}
+                className="p-1 rounded-lg hover:bg-white text-zinc-700 transition cursor-pointer"
+                title="Zoom In (+)"
+              >
+                <ZoomIn className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoomScale(window.innerWidth < 640 ? 0.46 : 1.0)}
+                className="px-2 py-0.5 text-[8.5px] font-mono font-bold uppercase tracking-wider text-zinc-600 hover:text-zinc-900 bg-white/80 hover:bg-white rounded-lg transition cursor-pointer"
+                title="Reset Zoom"
+              >
+                Fit
+              </button>
+            </div>
+          </div>
 
           {mode === 'generate' ? (
             <div className="flex items-center gap-2">
@@ -509,13 +553,23 @@ export default function PDFPreview({
           )}
         </div>
 
-        {/* The PDF canvas element */}
-        <div
-          ref={pdfTemplateRef}
-          id="billing-print-sheet"
-          className={`mx-auto w-[760px] min-h-[1000px] p-10 shadow-lg relative transition-all duration-300 pointer-events-auto ${currentStyle.fontDoc} ${currentStyle.outerBg}`}
-          style={{ width: '760px', backgroundColor: currentStyle.bgColorHex }} // Lock to static width and use exact theme background hex for html2canvas
-        >
+        {/* The PDF canvas element (With Scalable Canvas & Touch Panning Stage) */}
+        <div className="w-full overflow-x-auto p-2 sm:p-4 flex justify-center -webkit-overflow-scrolling-touch min-h-[500px]">
+          <div
+            style={{
+              transform: `scale(${zoomScale})`,
+              transformOrigin: 'top center',
+              width: '760px',
+              height: `${1080 * zoomScale}px`
+            }}
+            className="transition-transform duration-200 shrink-0"
+          >
+            <div
+              ref={pdfTemplateRef}
+              id="billing-print-sheet"
+              className={`w-[760px] min-h-[1050px] p-8 sm:p-10 shadow-2xl relative pointer-events-auto rounded-2xl border border-zinc-200/80 ${currentStyle.fontDoc} ${currentStyle.outerBg}`}
+              style={{ width: '760px', backgroundColor: currentStyle.bgColorHex }}
+            >
           {/* Theme visual overlay details based on selection */}
           <div className="flex flex-col h-full gap-5" id="canvas-internal-flow">
 
@@ -545,16 +599,13 @@ export default function PDFPreview({
               </div>
             </div>
 
-            {/* Styled Divider Line for non-boxed headers */}
-            {activeTheme === 'minimalist-outline' && (
-              <div className={`border-b ${currentStyle.borderLine}`} />
-            )}
 
-              {/* Sender Info / Client Info Row (2 Distinct Theme-Aware Cards) */}
-              <div className="grid grid-cols-2 gap-5 text-[11px] text-left mb-3" id="canvas-bipartite-billing">
+
+              {/* Sender Info / Client Info Row (Responsive 1-col on mobile, 2-col on desktop) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 text-[11px] text-left mb-3" id="canvas-bipartite-billing">
                 {/* 1. STUDIO / PROVIDER CARD */}
                 <div className={`p-4 rounded-xl border ${currentStyle.borderLineSubtle} ${currentStyle.badgeBg} flex flex-col gap-2 text-left shadow-sm`}>
-                  <div className={`flex items-center justify-between border-b pb-1.5 ${currentStyle.borderLineSubtle}`}>
+                  <div className="flex items-center justify-between pb-1">
                     <span className={`text-[8px] font-mono font-extrabold uppercase tracking-widest ${currentStyle.mutedText} flex items-center gap-1.5`}>
                       <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 opacity-70" /> PROVIDER / ISSUER
                     </span>
@@ -584,7 +635,7 @@ export default function PDFPreview({
 
                 {/* 2. TARGET CLIENT CARD (Theme-Dynamic Accent Card) */}
                 <div className={`p-4 rounded-xl border ${currentStyle.borderLine} ${currentStyle.badgeBg} flex flex-col gap-2 text-left shadow-sm relative overflow-hidden`}>
-                  <div className={`flex items-center justify-between border-b pb-1.5 ${currentStyle.borderLineSubtle}`}>
+                  <div className="flex items-center justify-between pb-1">
                     <span className={`text-[8px] font-mono font-extrabold uppercase tracking-widest ${currentStyle.boldText} flex items-center gap-1.5`}>
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> CLIENT / RECIPIENT
                     </span>
@@ -650,15 +701,15 @@ export default function PDFPreview({
                   No items configured in draft quotation. Open the editor above to inject services.
                 </div>
               ) : (
-                <div className="w-full">
-                  <table className="w-full text-left text-[11px] border-collapse">
+                <div className="w-full overflow-x-auto -webkit-overflow-scrolling-touch">
+                  <table className="w-full text-left text-[11px] border-collapse min-w-[540px]">
                     <thead>
                       <tr className={`border-b ${currentStyle.borderLine} ${currentStyle.tableHeaderBg} ${currentStyle.mutedText} uppercase text-[8px] font-bold tracking-wider`}>
-                        <th className="py-2.5 px-3 w-[350px]">Activity Description</th>
-                        <th className="py-2.5 text-right w-[90px] pr-2">Category</th>
-                        <th className="py-2.5 text-right w-[90px] pr-2">Price</th>
-                        <th className="py-2.5 text-center w-[60px]">Qty</th>
-                        <th className="py-2.5 text-right w-[110px] pr-3">Total</th>
+                        <th className="py-2.5 px-3 text-left">Activity Description</th>
+                        <th className="py-2.5 text-right px-2 whitespace-nowrap">Category</th>
+                        <th className="py-2.5 text-right px-2 whitespace-nowrap">Price</th>
+                        <th className="py-2.5 text-center px-2 whitespace-nowrap">Qty</th>
+                        <th className="py-2.5 text-right pr-3 whitespace-nowrap">Total</th>
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${currentStyle.divideLine}`}>
@@ -668,8 +719,8 @@ export default function PDFPreview({
                             <p className={`font-semibold text-[11px] ${currentStyle.boldText}`}>{item.title}</p>
                             <p className={`text-[9.5px] mt-0.5 leading-relaxed ${currentStyle.mutedText}`}>{item.description}</p>
                           </td>
-                          <td className="py-3 text-right text-[9px] uppercase pr-2">
-                            <span className={`inline-block px-2 py-0.5 font-mono text-[8.5px] rounded ${currentStyle.highlightBadge}`}>
+                          <td className="py-3 text-right text-[9px] uppercase pr-2 whitespace-nowrap">
+                            <span className={`inline-block px-2 py-0.5 font-mono text-[8.5px] rounded whitespace-nowrap ${currentStyle.highlightBadge}`}>
                               {item.category}
                             </span>
                           </td>
@@ -686,11 +737,11 @@ export default function PDFPreview({
               )}
             </div>
 
-            {/* TOTALS & PAYMENT TERMS BREAKDOWN (2-Column Grid) */}
-            <div className="grid grid-cols-2 gap-5 items-start my-2" id="canvas-billing-breakdown">
+            {/* TOTALS & PAYMENT TERMS BREAKDOWN (Responsive 1-col on mobile, 2-col on desktop) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5 items-start my-2" id="canvas-billing-breakdown">
               {/* LEFT CARD: PAYMENT & SETTLEMENT TERMS (Dynamic config.notes) */}
               <div className={`p-4 rounded-xl border ${currentStyle.borderLineSubtle} ${currentStyle.badgeBg} flex flex-col gap-2.5 text-left shadow-sm h-full justify-between`}>
-                <div className={`flex items-center justify-between border-b pb-1.5 ${currentStyle.borderLineSubtle}`}>
+                <div className="flex items-center justify-between pb-1">
                   <span className={`text-[8.5px] font-mono font-extrabold uppercase tracking-widest ${currentStyle.boldText} flex items-center gap-1.5`}>
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> PAYMENT & SETTLEMENT TERMS
                   </span>
@@ -702,20 +753,20 @@ export default function PDFPreview({
                     {config.notes ? config.notes.trim() : "50% upfront deposit required. Remainder due upon visual acceptance & final project delivery."}
                   </p>
 
-                  <div className="flex justify-between items-center text-[9px] border-t border-zinc-200/40 dark:border-zinc-700/40 pt-1 mt-1">
+                  <div className="flex justify-between items-center text-[9px] pt-1 mt-1">
                     <span className={`font-mono text-[8px] uppercase tracking-wider ${currentStyle.mutedText}`}>PRICE LOCK GUARANTEE:</span>
                     <span className={`font-mono font-bold ${currentStyle.boldText}`}>Valid to {config.expiryDate}</span>
                   </div>
                 </div>
 
-                <div className={`text-[8px] ${currentStyle.mutedText} border-t ${currentStyle.borderLineSubtle} pt-1 mt-0.5 leading-tight`}>
+                <div className={`text-[8px] ${currentStyle.mutedText} pt-1 mt-0.5 leading-tight`}>
                   Billed in Philippine Peso (PHP). Payable via Bank, GCash, or Direct Wire.
                 </div>
               </div>
 
               {/* RIGHT CARD: TOTALS CALCULATION BREAKDOWN */}
               <div className={`w-full flex flex-col gap-2 text-right leading-relaxed p-4 rounded-xl border ${currentStyle.borderLineSubtle} ${currentStyle.badgeBg} ${currentStyle.bodyText} shadow-sm`}>
-                <div className={`border-b ${currentStyle.borderLineSubtle} pb-2 flex flex-col gap-1.5`}>
+                <div className="pb-2 flex flex-col gap-1.5">
                   {basePrice > 0 && (
                     <div className={`flex justify-between items-center ${currentStyle.bodyText}`}>
                       <span className="uppercase tracking-wider text-[8px]">
@@ -731,7 +782,7 @@ export default function PDFPreview({
                     </div>
                   )}
                   {basePrice > 0 && ledgerSubTotal > 0 && (
-                    <div className={`flex justify-between items-center ${currentStyle.mutedText} border-t ${currentStyle.borderLineSubtle} pt-1 mt-1`}>
+                    <div className={`flex justify-between items-center ${currentStyle.mutedText} pt-1 mt-1`}>
                       <span className="uppercase tracking-wider text-[8px]">COMBINED SUB-SUMS:</span>
                       <span className="font-mono">₱{subtotal.toLocaleString()}</span>
                     </div>
@@ -749,9 +800,9 @@ export default function PDFPreview({
                     </div>
                   )}
                 </div>
-                <div className="flex justify-between items-center pt-1" id="final-total">
-                  <span className={`${currentStyle.fontHeader} font-black text-xs uppercase tracking-widest ${currentStyle.boldText}`}>TOTAL ESTIMATED AMOUNT:</span>
-                  <span className={`font-mono font-extrabold text-sm ${currentStyle.boldText}`}>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-1 gap-1 text-right" id="final-total">
+                  <span className={`${currentStyle.fontHeader} font-black text-[9px] sm:text-xs uppercase tracking-widest ${currentStyle.boldText} text-left sm:text-right`}>TOTAL ESTIMATED AMOUNT:</span>
+                  <span className={`font-mono font-extrabold text-xs sm:text-sm ${currentStyle.boldText} shrink-0`}>
                     ₱{Math.round(totalAmount).toLocaleString()}
                   </span>
                 </div>
@@ -794,5 +845,7 @@ export default function PDFPreview({
         </div>
       </div>
     </div>
+  </div>
+</div>
   );
 }

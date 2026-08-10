@@ -35,10 +35,10 @@ export default function QuoteNavbar({
           <NextLogo className="h-7 w-7 text-white shrink-0 drop-shadow-sm" />
           <div className="flex flex-col select-none">
             <span className="font-display font-black text-sm tracking-tight text-white leading-none">
-              NEXT QUOTATION
+              NEXT STUDIO
             </span>
             <span className="text-[9px] font-mono text-white/30 tracking-[0.2em] uppercase leading-none mt-0.5">
-              Quotation Builder
+              Project Costing Engine
             </span>
           </div>
         </div>
