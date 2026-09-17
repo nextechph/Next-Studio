@@ -360,6 +360,7 @@ export default function App() {
                     }}
                     onDeleteQuote={(id) => setHistory((prev) => prev.filter((q) => q.id !== id))}
                     onSaveCurrentSnapshot={saveSnap}
+                    activeCurrency={config.currency || 'PHP'}
                   />
                 )}
               </motion.div>
