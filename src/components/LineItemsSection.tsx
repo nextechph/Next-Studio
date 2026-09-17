@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { QuotationItem, BrandingConfig } from '../types';
 import { SERVICE_PRESETS, ServicePreset } from '../data/presets';
-import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers, Check } from 'lucide-react';
+import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers, Check, Coins } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import GlassSelect from './GlassSelect';
+import { PRESET_CURRENCIES } from '../data/currencies';
 
 const STUDENT_ADDONS = [
   { id: 'addon-additional-page', title: 'Additional Page', price: 1000, category: 'Development', description: 'Additional tailored content page with fully styled sections.' },
@@ -29,6 +30,41 @@ const categories = ['All', 'Development', 'Design', 'E-Commerce', 'Security & DB
 
 export default function LineItemsSection({ items, config, onUpdateItems, onUpdateConfig, clientType }: LineItemsProps) {
   const [filterCategory, setFilterCategory] = useState('All');
+  const currencySymbol = config.currencySymbol || '₱';
+  const currentCurrency = config.currency || 'PHP';
+  const isCustomCurrency = currentCurrency === 'CUSTOM' || (!PRESET_CURRENCIES.some((c) => c.code === currentCurrency) && currentCurrency !== 'PHP');
+
+  const currencyOptions = [
+    ...PRESET_CURRENCIES.map((c) => ({
+      value: c.code,
+      label: `${c.code} (${c.symbol})`,
+      subLabel: c.name,
+    })),
+    {
+      value: 'CUSTOM',
+      label: 'Custom Currency...',
+      subLabel: 'Declare custom code & symbol',
+    },
+  ];
+
+  const handleCurrencySelect = (code: string) => {
+    if (code === 'CUSTOM') {
+      onUpdateConfig({
+        currency: 'CUSTOM',
+        currencySymbol: config.currencySymbol || '$',
+        currencyName: 'Custom Currency',
+      });
+    } else {
+      const match = PRESET_CURRENCIES.find((c) => c.code === code);
+      if (match) {
+        onUpdateConfig({
+          currency: match.code,
+          currencySymbol: match.symbol,
+          currencyName: match.name,
+        });
+      }
+    }
+  };
 
   // Add a blank deliverable line
   const addBlankItem = () => {
@@ -149,7 +185,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
                   </div>
 
                   <span className={`font-mono text-xs font-bold transition-colors ${isChecked ? 'text-white font-extrabold' : 'text-white/50'}`}>
-                    +₱{addon.price.toLocaleString()}
+                    +{currencySymbol}{addon.price.toLocaleString()}
                   </span>
                 </motion.div>
               );
@@ -191,7 +227,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
                   <div className="flex flex-col leading-none">
                     <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Package Total</span>
                     <span className="font-mono text-xs sm:text-sm font-bold text-white mt-0.5">
-                      ₱{preset.defaultPrice.toLocaleString()}
+                      {currencySymbol}{preset.defaultPrice.toLocaleString()}
                     </span>
                   </div>
 
@@ -328,10 +364,10 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
                     {/* Rate Input */}
                     <div className="col-span-1 sm:col-span-3 flex flex-col gap-1">
                       <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50">
-                        RATE (₱)
+                        RATE ({currencySymbol})
                       </label>
                       <div className="flex items-center glass-input px-2.5 py-1.5 rounded-xl border border-white/12 focus-within:border-white/30 bg-white/04 shadow-inner">
-                        <span className="text-white/50 text-xs font-mono mr-1">₱</span>
+                        <span className="text-white/50 text-xs font-mono mr-1">{currencySymbol}</span>
                         <input
                           type="number"
                           min="0"
@@ -382,7 +418,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
                         SUBTOTAL
                       </label>
                       <span className="font-mono font-extrabold text-xs text-white px-3 py-1.5 rounded-xl glass-panel border border-white/12 bg-white/08 shadow-inner w-full text-right">
-                        ₱{(item.unitPrice * item.quantity).toLocaleString()}
+                        {currencySymbol}{(item.unitPrice * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -424,13 +460,69 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
 
       </div>
 
-      {/* ── 3. DISCOUNT & TAX SETTINGS ─────────────────────────── */}
+      {/* ── 3. FINANCIAL, CURRENCY & VALIDITY SETTINGS ──────────── */}
       <div className="glass-panel p-5 rounded-3xl flex flex-col gap-4 border border-white/12 shadow-2xl" id="secondary-charges-form">
         <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-white/40">
-          Discount & Tax Settings
+          Financial, Currency & Validity Settings
         </span>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Currency Liquid Glass Card */}
+          <div className="glass-panel p-4 rounded-2xl flex flex-col justify-between border border-white/12 bg-white/03 gap-2.5 shadow-lg relative">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold tracking-widest uppercase text-white/60 flex items-center gap-1.5">
+                <Coins className="h-3.5 w-3.5 text-emerald-400" /> Currency
+              </label>
+              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/08 text-white/80 border border-white/10">
+                {currencySymbol} {currentCurrency}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <GlassSelect
+                value={isCustomCurrency ? 'CUSTOM' : currentCurrency}
+                onChange={(val) => handleCurrencySelect(String(val))}
+                options={currencyOptions}
+                placeholder="Select Currency"
+                id="currency-glass-select"
+              />
+
+              <AnimatePresence>
+                {isCustomCurrency && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="grid grid-cols-2 gap-2 pt-1.5 border-t border-white/08"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[8px] font-mono font-bold uppercase text-white/40">Code</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CAD"
+                        maxLength={5}
+                        value={config.currency === 'CUSTOM' ? '' : (config.currency || '')}
+                        onChange={(e) => onUpdateConfig({ currency: e.target.value.toUpperCase(), currencyName: `${e.target.value.toUpperCase()} (Custom)` })}
+                        className="w-full px-2 py-1 text-xs font-mono font-bold uppercase rounded-lg glass-input border border-white/12 bg-white/05 text-white outline-none focus:border-white/30"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[8px] font-mono font-bold uppercase text-white/40">Symbol</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. $"
+                        maxLength={4}
+                        value={config.currencySymbol || ''}
+                        onChange={(e) => onUpdateConfig({ currencySymbol: e.target.value })}
+                        className="w-full px-2 py-1 text-xs font-mono font-bold rounded-lg glass-input border border-white/12 bg-white/05 text-white outline-none focus:border-white/30"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
           {/* Discount Liquid Glass Card */}
           <div className="glass-panel p-4 rounded-2xl flex flex-col justify-between border border-white/12 bg-white/03 gap-2 shadow-lg">
             <div className="flex items-center justify-between">

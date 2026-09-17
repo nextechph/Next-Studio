@@ -10,6 +10,7 @@ interface NavbarProps {
   itemCount: number;
   onCompilePDF: () => void;
   activePanel?: string;
+  currencySymbol?: string;
 }
 
 export default function QuoteNavbar({
@@ -18,7 +19,8 @@ export default function QuoteNavbar({
   totalAmount,
   itemCount,
   onCompilePDF,
-  activePanel
+  activePanel,
+  currencySymbol = '₱'
 }: NavbarProps) {
   return (
     <motion.nav
@@ -60,7 +62,7 @@ export default function QuoteNavbar({
                 transition={{ duration: 0.25 }}
                 className="font-mono font-bold text-sm text-white"
               >
-                ₱{totalAmount.toLocaleString()}
+                {currencySymbol}{totalAmount.toLocaleString()}
               </motion.span>
             </div>
           </div>

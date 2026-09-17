@@ -162,6 +162,11 @@ export default function PDFPreview({
   });
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
 
+  // Currency configuration
+  const currencySymbol = config.currencySymbol || '₱';
+  const currencyCode = config.currency || 'PHP';
+  const currencyName = config.currencyName || (currencyCode === 'USD' ? 'US Dollar' : 'Philippine Peso');
+
   // Totals calculations
   const subtotal = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
   const discountAmount = (config.enableDiscount && config.discount > 0) ? subtotal * (config.discount / 100) : 0;
@@ -722,10 +727,10 @@ export default function PDFPreview({
                               {item.category}
                             </span>
                           </td>
-                          <td className="py-3 text-right font-mono pr-2">₱{item.unitPrice.toLocaleString()}</td>
+                          <td className="py-3 text-right font-mono pr-2">{currencySymbol}{item.unitPrice.toLocaleString()}</td>
                           <td className="py-3 text-center font-mono">{item.quantity}</td>
                           <td className={`py-3 text-right font-mono font-bold pr-3 ${currentStyle.boldText}`}>
-                            ₱{(item.unitPrice * item.quantity).toLocaleString()}
+                            {currencySymbol}{(item.unitPrice * item.quantity).toLocaleString()}
                           </td>
                         </tr>
                       ))}
@@ -758,7 +763,7 @@ export default function PDFPreview({
                 </div>
 
                 <div className={`text-[8px] ${currentStyle.mutedText} pt-1 mt-0.5 leading-tight`}>
-                  Billed in Philippine Peso (PHP). Payable via Bank, GCash, or Direct Wire.
+                  Billed in {currencyName} ({currencyCode}). Payable via Bank, GCash, or Direct Wire.
                 </div>
               </div>
 
@@ -767,29 +772,29 @@ export default function PDFPreview({
                 <div className="pb-2 flex flex-col gap-1.5">
                   <div className="flex justify-between items-center">
                     <span className="uppercase tracking-wider text-[8px]">SUBTOTAL:</span>
-                    <span className="font-mono font-medium">₱{subtotal.toLocaleString()}</span>
+                    <span className="font-mono font-medium">{currencySymbol}{subtotal.toLocaleString()}</span>
                   </div>
                   {config.enableDiscount && config.discount > 0 && (
                     <div className="flex justify-between items-center text-emerald-700">
                       <span className="uppercase tracking-wider text-[8px] text-emerald-700">Studio Discount ({config.discount}%):</span>
-                      <span className="font-mono">-₱{discountAmount.toLocaleString()}</span>
+                      <span className="font-mono">-{currencySymbol}{discountAmount.toLocaleString()}</span>
                     </div>
                   )}
                   {config.enableTax && config.taxRate > 0 && (
                     <div className={`flex justify-between items-center ${currentStyle.mutedText}`}>
                       <span className="uppercase tracking-wider text-[8px]">EST. ADD-ON TAX ({config.taxRate}%):</span>
-                      <span className="font-mono">+₱{taxAmount.toLocaleString()}</span>
+                      <span className="font-mono">+{currencySymbol}{taxAmount.toLocaleString()}</span>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-1 gap-1 text-right" id="final-total">
                   <span className={`${currentStyle.fontHeader} font-black text-[9px] sm:text-xs uppercase tracking-widest ${currentStyle.boldText} text-left sm:text-right`}>TOTAL ESTIMATED AMOUNT:</span>
                   <span className={`font-mono font-extrabold text-xs sm:text-sm ${currentStyle.boldText} shrink-0`}>
-                    ₱{Math.round(totalAmount).toLocaleString()}
+                    {currencySymbol}{Math.round(totalAmount).toLocaleString()}
                   </span>
                 </div>
                 <div className={`mt-1 text-[8px] ${currentStyle.mutedText} leading-none`}>
-                  Calculated automatically. Sum representation in Philippine Peso (PHP).
+                  Calculated automatically. Sum representation in {currencyName} ({currencyCode}).
                 </div>
               </div>
             </div>

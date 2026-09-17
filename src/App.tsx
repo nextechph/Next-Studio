@@ -113,6 +113,9 @@ export default function App() {
       if (!p.approvedByHQ) p.approvedByHQ = "One Epicenter Way, Silicon Oasis";
       if (!p.approvedByEmail) p.approvedByEmail = "studio@nexttech.co";
       if (!p.approvedByWeb) p.approvedByWeb = "www.nexttechnology.dev";
+      if (!p.currency) p.currency = 'PHP';
+      if (!p.currencySymbol) p.currencySymbol = '₱';
+      if (!p.currencyName) p.currencyName = 'Philippine Peso';
       return p;
     }
     const d = new Date(), e = new Date(); e.setDate(e.getDate() + 30);
@@ -121,6 +124,7 @@ export default function App() {
       issueDate: d.toISOString().split('T')[0], expiryDate: e.toISOString().split('T')[0],
       notes: "Payment: 50% upfront, remainder on delivery.", terms: '', discount: 0, taxRate: 0,
       enableDiscount: false, enableTax: false,
+      currency: 'PHP', currencySymbol: '₱', currencyName: 'Philippine Peso',
       approvedBy: "Next Technology Inc.", approvedByHQ: "One Epicenter Way, Silicon Oasis",
       approvedByEmail: "studio@nexttech.co", approvedByWeb: "www.nexttechnology.dev",
     };
@@ -137,6 +141,7 @@ export default function App() {
 
   const hasDiscount = config.enableDiscount ?? false;
   const hasTax      = config.enableTax ?? false;
+  const currencySymbol = config.currencySymbol || '₱';
 
   const sub   = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const disc  = hasDiscount ? sub * (config.discount / 100) : 0;
@@ -407,7 +412,7 @@ export default function App() {
           <div className="glass-panel p-4 xl:p-5 rounded-2xl flex flex-col gap-1 border border-white/10" id="live-total-block">
             <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-white/35">Total Estimate</span>
             <div className="font-mono font-black text-2xl xl:text-3xl text-white tracking-tight mt-0.5">
-              ₱<AnimatedTotal value={total} />
+              {currencySymbol}<AnimatedTotal value={total} />
             </div>
 
             {(hasDiscount || hasTax) ? (
@@ -460,7 +465,7 @@ export default function App() {
                         <p className="text-[10px] text-white/30 font-mono">Qty: {item.quantity}</p>
                       </div>
                       <span className="font-mono text-xs font-bold text-white/60 shrink-0">
-                        ₱{(item.unitPrice * item.quantity).toLocaleString()}
+                        {currencySymbol}{(item.unitPrice * item.quantity).toLocaleString()}
                       </span>
                     </motion.div>
                   ))
@@ -477,27 +482,27 @@ export default function App() {
           <div className="glass-panel p-4 rounded-2xl flex flex-col gap-2 border border-white/08" id="live-calculation-breakdown">
             <div className="flex items-center justify-between text-xs text-white/50 font-sans">
               <span>Subtotal</span>
-              <span className="font-mono font-semibold text-white/70">₱{sub.toLocaleString()}</span>
+              <span className="font-mono font-semibold text-white/70">{currencySymbol}{sub.toLocaleString()}</span>
             </div>
 
             {hasDiscount && (
               <div className="flex items-center justify-between text-xs text-white/40 font-sans">
                 <span>Discount ({config.discount}%)</span>
-                <span className="font-mono text-white/40">-₱{Math.round(disc).toLocaleString()}</span>
+                <span className="font-mono text-white/40">-{currencySymbol}{Math.round(disc).toLocaleString()}</span>
               </div>
             )}
 
             {hasTax && (
               <div className="flex items-center justify-between text-xs text-white/40 font-sans">
                 <span>Tax ({config.taxRate}%)</span>
-                <span className="font-mono text-white/40">+₱{Math.round(tax).toLocaleString()}</span>
+                <span className="font-mono text-white/40">+{currencySymbol}{Math.round(tax).toLocaleString()}</span>
               </div>
             )}
 
             <div className="pt-2 mt-1 border-t border-white/08 flex items-center justify-between">
               <span className="font-bold text-xs text-white">Final Total</span>
               <span className="font-mono font-black text-base text-white">
-                ₱<AnimatedTotal value={total} />
+                {currencySymbol}<AnimatedTotal value={total} />
               </span>
             </div>
           </div>
@@ -527,7 +532,7 @@ export default function App() {
           <div className="flex flex-col leading-none">
             <span className="text-[8px] font-mono font-bold uppercase tracking-widest text-white/35">Total Estimate</span>
             <span className="font-mono font-black text-xs sm:text-sm text-white mt-0.5">
-              ₱{Math.round(total).toLocaleString()}
+              {currencySymbol}{Math.round(total).toLocaleString()}
             </span>
           </div>
 
@@ -587,7 +592,7 @@ export default function App() {
       <div className="hidden lg:flex xl:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-black/90 backdrop-blur-2xl border-t border-white/12 items-center justify-between gap-3 px-6 shadow-2xl" id="tablet-quick-action-bar">
         <div className="flex flex-col leading-none">
           <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-white/35">Total Estimate</span>
-          <span className="font-mono font-black text-sm text-white mt-1">₱{Math.round(total).toLocaleString()}</span>
+          <span className="font-mono font-black text-sm text-white mt-1">{currencySymbol}{Math.round(total).toLocaleString()}</span>
         </div>
         <div className="flex items-center gap-2">
           <button

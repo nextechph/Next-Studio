@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrandingConfig, BrandingTheme } from '../types';
-import { Palette, Check, Cpu, Terminal, Shield, Zap, Building2, MapPin, Mail, Globe, FileText, Sparkles, Eye } from 'lucide-react';
+import { Palette, Check, Cpu, Terminal, Shield, Zap, Building2, MapPin, Mail, Globe, FileText, Sparkles, Eye, Coins } from 'lucide-react';
+import GlassSelect from './GlassSelect';
+import { PRESET_CURRENCIES } from '../data/currencies';
 
 interface PDFDesignPanelProps {
   config: BrandingConfig;
@@ -90,6 +92,42 @@ export default function PDFDesignPanel({
     }
   ];
 
+  const currencySymbol = config.currencySymbol || '₱';
+  const currentCurrency = config.currency || 'PHP';
+  const isCustomCurrency = currentCurrency === 'CUSTOM' || (!PRESET_CURRENCIES.some((c) => c.code === currentCurrency) && currentCurrency !== 'PHP');
+
+  const currencyOptions = [
+    ...PRESET_CURRENCIES.map((c) => ({
+      value: c.code,
+      label: `${c.code} (${c.symbol})`,
+      subLabel: c.name,
+    })),
+    {
+      value: 'CUSTOM',
+      label: 'Custom Currency...',
+      subLabel: 'Declare custom currency code & symbol',
+    },
+  ];
+
+  const handleCurrencySelect = (code: string) => {
+    if (code === 'CUSTOM') {
+      onUpdateConfig({
+        currency: 'CUSTOM',
+        currencySymbol: config.currencySymbol || '$',
+        currencyName: 'Custom Currency',
+      });
+    } else {
+      const match = PRESET_CURRENCIES.find((c) => c.code === code);
+      if (match) {
+        onUpdateConfig({
+          currency: match.code,
+          currencySymbol: match.symbol,
+          currencyName: match.name,
+        });
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto" id="pdf-design-control-board">
       
@@ -108,7 +146,7 @@ export default function PDFDesignPanel({
             </span>
           </div>
           <p className="text-xs text-white/40 mt-0.5 leading-relaxed">
-            Customize company header credentials, quotation terms, and select high-tech visual themes for PDF generation.
+            Customize company header credentials, currency, quotation terms, and select visual themes for PDF generation.
           </p>
         </div>
       </div>
@@ -177,6 +215,47 @@ export default function PDFDesignPanel({
               onChange={(e) => onUpdateConfig({ approvedByWeb: e.target.value })}
               className="w-full font-mono text-xs text-white glass-input bg-white/05 border border-white/12 focus:border-white/30 px-3.5 py-2.5 rounded-xl transition-all placeholder:text-white/25 outline-none shadow-inner"
             />
+          </div>
+
+          {/* Currency Selector */}
+          <div className="flex flex-col gap-1.5 sm:col-span-2 p-3.5 rounded-2xl glass-panel border border-white/10 bg-white/02">
+            <div className="flex items-center justify-between">
+              <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/60 flex items-center gap-1.5">
+                <Coins className="h-3.5 w-3.5 text-emerald-400" /> Quotation Currency
+              </label>
+              <span className="text-[9px] font-mono font-bold text-white/70">
+                {currencySymbol} {currentCurrency}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <GlassSelect
+                value={isCustomCurrency ? 'CUSTOM' : currentCurrency}
+                onChange={(val) => handleCurrencySelect(String(val))}
+                options={currencyOptions}
+                placeholder="Select Currency"
+                id="design-panel-currency-select"
+              />
+              {isCustomCurrency && (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Code (e.g. CAD)"
+                    maxLength={5}
+                    value={config.currency === 'CUSTOM' ? '' : (config.currency || '')}
+                    onChange={(e) => onUpdateConfig({ currency: e.target.value.toUpperCase(), currencyName: `${e.target.value.toUpperCase()} (Custom)` })}
+                    className="w-1/2 font-mono text-xs uppercase px-3 py-2 rounded-xl glass-input bg-white/05 border border-white/12 text-white outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Symbol (e.g. $)"
+                    maxLength={4}
+                    value={config.currencySymbol || ''}
+                    onChange={(e) => onUpdateConfig({ currencySymbol: e.target.value })}
+                    className="w-1/2 font-mono text-xs px-3 py-2 rounded-xl glass-input bg-white/05 border border-white/12 text-white outline-none"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -294,13 +373,13 @@ export default function PDFDesignPanel({
                   <div className="flex flex-col gap-2 py-1">
                     <div className="flex justify-between text-[8px] text-emerald-300 font-medium">
                       <span>01. Core Architecture</span>
-                      <span>₱3,200.00</span>
+                      <span>{currencySymbol}3,200.00</span>
                     </div>
                   </div>
 
                   <div className="border-t border-emerald-500/30 pt-2 flex justify-between items-center bg-emerald-950/40 p-2 rounded-lg border border-emerald-500/20">
                     <span className="text-[8px] uppercase font-bold text-emerald-400/70">TOTAL ESTIMATE</span>
-                    <span className="text-[10px] font-mono font-black text-emerald-400">₱4,860.00</span>
+                    <span className="text-[10px] font-mono font-black text-emerald-400">{currencySymbol}4,860.00</span>
                   </div>
                 </div>
               )}
@@ -322,7 +401,7 @@ export default function PDFDesignPanel({
 
                   <div className="border-t border-zinc-200 pt-2 flex justify-between items-center bg-zinc-50 p-2 rounded-lg">
                     <span className="text-[8px] uppercase font-bold text-zinc-500">NET CALCULATED TOTAL</span>
-                    <span className="text-[10px] font-mono font-black text-zinc-900">₱4,860.00</span>
+                    <span className="text-[10px] font-mono font-black text-zinc-900">{currencySymbol}4,860.00</span>
                   </div>
                 </div>
               )}
@@ -344,7 +423,7 @@ export default function PDFDesignPanel({
 
                   <div className="border-t border-white pt-2 flex justify-between items-center bg-zinc-900 p-2 border">
                     <span className="text-[8px] uppercase font-bold text-white/70">TOTAL AMOUNT</span>
-                    <span className="text-[10px] font-mono font-black text-white">₱4,860.00</span>
+                    <span className="text-[10px] font-mono font-black text-white">{currencySymbol}4,860.00</span>
                   </div>
                 </div>
               )}
@@ -366,7 +445,7 @@ export default function PDFDesignPanel({
 
                   <div className="border-t border-slate-800 pt-2 flex justify-between items-center bg-slate-950/80 p-2 rounded-lg border border-amber-500/20">
                     <span className="text-[8px] font-serif text-slate-400 font-bold uppercase">Net Calculated Total</span>
-                    <span className="text-[10px] font-mono font-black text-amber-400">₱4,860.00</span>
+                    <span className="text-[10px] font-mono font-black text-amber-400">{currencySymbol}4,860.00</span>
                   </div>
                 </div>
               )}
@@ -388,7 +467,7 @@ export default function PDFDesignPanel({
 
                   <div className="border-t border-sky-800 pt-2 flex justify-between items-center bg-sky-900/60 p-2 rounded-lg border border-cyan-400/20">
                     <span className="text-[8px] uppercase font-bold text-sky-300">Quantum Total Sum</span>
-                    <span className="text-[10px] font-mono font-black text-cyan-300">₱4,860.00</span>
+                    <span className="text-[10px] font-mono font-black text-cyan-300">{currencySymbol}4,860.00</span>
                   </div>
                 </div>
               )}

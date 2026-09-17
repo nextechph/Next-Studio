@@ -39,6 +39,9 @@ export interface BrandingConfig {
   approvedByWeb?: string;
   logoUrl?: string;
   logoHeight?: number; // Logo height in pixels
+  currency?: string; // Currency code, e.g. 'PHP', 'USD', 'EUR'
+  currencySymbol?: string; // Currency symbol, e.g. '₱', '$', '€'
+  currencyName?: string; // Currency full name, e.g. 'Philippine Peso'
 }
 
 export interface SavedQuote {

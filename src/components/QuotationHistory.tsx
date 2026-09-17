@@ -28,6 +28,7 @@ export default function QuotationHistory({ history, onLoadQuote, onDeleteQuote, 
 
   const totalPortfolioValue = history.reduce((sum, q) => sum + q.totalAmount, 0);
   const avgProposalValue = history.length > 0 ? Math.round(totalPortfolioValue / history.length) : 0;
+  const defaultCurrencySymbol = history[0]?.config?.currencySymbol || '₱';
 
   const handleLoad = (quote: SavedQuote) => {
     onLoadQuote(quote);
@@ -98,8 +99,8 @@ export default function QuotationHistory({ history, onLoadQuote, onDeleteQuote, 
       >
         {[
           { icon: Layers,    label: 'Total Saved',      value: String(history.length),                   color: 'text-white' },
-          { icon: DollarSign, label: 'Portfolio Value',  value: `₱${totalPortfolioValue.toLocaleString()}`, color: 'text-emerald-400' },
-          { icon: TrendingUp, label: 'Average Estimate', value: `₱${avgProposalValue.toLocaleString()}`,    color: 'text-white/60' },
+          { icon: DollarSign, label: 'Portfolio Value',  value: `${defaultCurrencySymbol}${totalPortfolioValue.toLocaleString()}`, color: 'text-emerald-400' },
+          { icon: TrendingUp, label: 'Average Estimate', value: `${defaultCurrencySymbol}${avgProposalValue.toLocaleString()}`,    color: 'text-white/60' },
         ].map((card, i) => (
           <motion.div
             key={card.label}
@@ -194,7 +195,7 @@ export default function QuotationHistory({ history, onLoadQuote, onDeleteQuote, 
                     <div className="glass-panel p-3 rounded-2xl my-4">
                       <div className="flex items-center justify-between text-[10px] text-white/25 uppercase tracking-wider mb-2 font-bold">
                         <span>Deliverables ({quote.items.length})</span>
-                        <span className="font-mono text-white/50">₱{quote.totalAmount.toLocaleString()}</span>
+                        <span className="font-mono text-white/50">{(quote.config?.currencySymbol || '₱')}{quote.totalAmount.toLocaleString()}</span>
                       </div>
                       <div className="space-y-1.5 max-h-20 overflow-y-auto pr-1">
                         {quote.items.map((item, i) => (
@@ -212,7 +213,7 @@ export default function QuotationHistory({ history, onLoadQuote, onDeleteQuote, 
                   <div className="pt-3 border-t border-white/06 flex items-center justify-between gap-4">
                     <div>
                       <span className="text-[9px] font-bold tracking-wider text-white/25 uppercase block">TOTAL</span>
-                      <span className="font-mono font-bold text-sm text-white mt-0.5 block">₱{quote.totalAmount.toLocaleString()}</span>
+                      <span className="font-mono font-bold text-sm text-white mt-0.5 block">{(quote.config?.currencySymbol || '₱')}{quote.totalAmount.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <motion.button
