@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { QuotationItem, BrandingConfig } from '../types';
 import { SERVICE_PRESETS, ServicePreset } from '../data/presets';
-import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers, Check, Coins } from 'lucide-react';
+import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers, Check, Coins, FileCheck2, FileText, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import GlassSelect from './GlassSelect';
 import { PRESET_CURRENCIES } from '../data/currencies';
+import { getLocalTodayDate, getLocalFutureDate } from '../utils/dateUtils';
 
 const STUDENT_ADDONS = [
   { id: 'addon-additional-page', title: 'Additional Page', price: 1000, category: 'Development', description: 'Additional tailored content page with fully styled sections.' },
@@ -30,6 +31,8 @@ const categories = ['All', 'Development', 'Design', 'E-Commerce', 'Security & DB
 
 export default function LineItemsSection({ items, config, onUpdateItems, onUpdateConfig, clientType }: LineItemsProps) {
   const [filterCategory, setFilterCategory] = useState('All');
+  const [validityDays, setValidityDays] = useState(30);
+  const isProposal = config.documentType === 'proposal';
   const currencySymbol = config.currencySymbol || '₱';
   const currentCurrency = config.currency || 'PHP';
   const isCustomCurrency = currentCurrency === 'CUSTOM' || (!PRESET_CURRENCIES.some((c) => c.code === currentCurrency) && currentCurrency !== 'PHP');
@@ -647,31 +650,98 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
             </AnimatePresence>
           </div>
 
-          {/* Quote Expiry Days Liquid Glass Card */}
+          {/* Document Mode & Price Lock Liquid Glass Card */}
           <div className="glass-panel p-4 rounded-2xl flex flex-col justify-between border border-white/12 bg-white/03 gap-2 shadow-lg">
-            <label className="text-[10px] font-bold tracking-widest uppercase text-white/60 flex items-center gap-1.5">
-              <Tag className="h-3.5 w-3.5 text-white/50" /> Expiry Validity
-            </label>
-            <GlassSelect
-              value={15}
-              onChange={(daysVal) => {
-                const days = Number(daysVal);
-                const date = new Date();
-                const validityDate = new Date();
-                validityDate.setDate(validityDate.getDate() + days);
-                onUpdateConfig({
-                  issueDate: date.toISOString().split('T')[0],
-                  expiryDate: validityDate.toISOString().split('T')[0],
-                });
-              }}
-              options={[
-                { value: 15, label: '15 Days (Standard)' },
-                { value: 30, label: '30 Days (Recommended)' },
-                { value: 60, label: '60 Days (Extended)' },
-              ]}
-              position="bottom"
-              id="expiry-validity-glass-select"
-            />
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-bold tracking-widest uppercase text-white/60 flex items-center gap-1.5 cursor-pointer">
+                {isProposal ? (
+                  <FileText className="h-3.5 w-3.5 text-indigo-400" />
+                ) : (
+                  <FileCheck2 className="h-3.5 w-3.5 text-emerald-400" />
+                )}
+                <span>Proposal Mode</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextType = isProposal ? 'receipt' : 'proposal';
+                  const today = config.issueDate || getLocalTodayDate();
+                  onUpdateConfig({
+                    documentType: nextType,
+                    issueDate: today,
+                    expiryDate: getLocalFutureDate(validityDays, today)
+                  });
+                }}
+                className={`relative inline-flex items-center h-6 w-11 shrink-0 cursor-pointer rounded-full px-0.5 border transition-all duration-300 ease-in-out focus:outline-none ${
+                  isProposal
+                    ? 'bg-indigo-500/30 border-indigo-400/50 shadow-[0_0_12px_rgba(99,102,241,0.3),_inset_0_1px_1px_rgba(255,255,255,0.4)] backdrop-blur-md'
+                    : 'bg-white/06 border-white/12 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] backdrop-blur-sm hover:border-white/25'
+                }`}
+                title={isProposal ? "Switch to Final Receipt" : "Toggle Proposal Mode (Enables Price Lock Guarantee)"}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full transition-transform duration-300 ease-in-out ${
+                    isProposal
+                      ? 'translate-x-5 bg-gradient-to-b from-white via-indigo-100 to-indigo-300 shadow-[0_2px_6px_rgba(0,0,0,0.6)] border border-white'
+                      : 'translate-x-0 bg-gradient-to-b from-white/40 to-white/15 border border-white/20 shadow-sm'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {isProposal ? (
+                <motion.div
+                  key="proposal-mode-active"
+                  initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                  exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex flex-col gap-1.5"
+                >
+                  <div className="flex items-center justify-between text-[9px] font-mono text-indigo-300/80">
+                    <span className="font-bold">PRICE LOCK VALIDITY</span>
+                    <span>Valid to {config.expiryDate || getLocalFutureDate(30, config.issueDate)}</span>
+                  </div>
+                  <GlassSelect
+                    value={validityDays}
+                    onChange={(daysVal) => {
+                      const days = Number(daysVal);
+                      setValidityDays(days);
+                      const baseDate = config.issueDate || getLocalTodayDate();
+                      onUpdateConfig({
+                        issueDate: baseDate,
+                        expiryDate: getLocalFutureDate(days, baseDate),
+                      });
+                    }}
+                    options={[
+                      { value: 15, label: '15 Days (Price Lock)' },
+                      { value: 30, label: '30 Days (Recommended)' },
+                      { value: 60, label: '60 Days (Extended)' },
+                    ]}
+                    position="bottom"
+                    id="expiry-validity-glass-select"
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="receipt-mode-active"
+                  initial={{ opacity: 0, y: -3 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 3 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col gap-1"
+                >
+                  <div className="flex items-center justify-between text-[9px] font-mono">
+                    <span className="text-emerald-400 font-bold">FINAL RECEIPT</span>
+                    <span className="text-white/40">{config.issueDate || getLocalTodayDate()}</span>
+                  </div>
+                  <span className="text-[10px] text-white/30 leading-snug">
+                    Treated as final receipt. Price lock guarantee is hidden until proposal is toggled.
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

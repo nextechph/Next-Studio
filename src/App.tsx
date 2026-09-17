@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'motion/react';
 
+import { getLocalTodayDate, getLocalFutureDate } from './utils/dateUtils';
+
 /* ── Defaults ─────────────────────────────────────────────── */
 const DEFAULT_CLIENT: ClientDetails = {
   name: '', contactNumber: '', email: '', companyName: '', address: '',
@@ -106,6 +108,7 @@ export default function App() {
 
   const [config, setConfig] = useState<BrandingConfig>(() => {
     const s = localStorage.getItem('next_quote_config');
+    const today = getLocalTodayDate();
     if (s) {
       const p = JSON.parse(s);
       if (!p.notes?.trim()) p.notes = "Payment: 50% upfront, remainder on delivery.";
@@ -116,12 +119,18 @@ export default function App() {
       if (!p.currency) p.currency = 'PHP';
       if (!p.currencySymbol) p.currencySymbol = '₱';
       if (!p.currencyName) p.currencyName = 'Philippine Peso';
+      if (!p.documentType) p.documentType = 'receipt';
+      // Sync past or outdated issueDate to today's local date (Sept 18, 2026)
+      if (!p.issueDate || p.issueDate < today) {
+        p.issueDate = today;
+        p.expiryDate = getLocalFutureDate(30, today);
+      }
       return p;
     }
-    const d = new Date(), e = new Date(); e.setDate(e.getDate() + 30);
     return {
       theme: 'next-light', quoteNumber: `NT-2026-${Math.floor(Math.random() * 9000 + 1000)}`,
-      issueDate: d.toISOString().split('T')[0], expiryDate: e.toISOString().split('T')[0],
+      issueDate: today, expiryDate: getLocalFutureDate(30, today),
+      documentType: 'receipt',
       notes: "Payment: 50% upfront, remainder on delivery.", terms: '', discount: 0, taxRate: 0,
       enableDiscount: false, enableTax: false,
       currency: 'PHP', currencySymbol: '₱', currencyName: 'Philippine Peso',

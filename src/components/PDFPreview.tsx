@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ClientDetails, QuotationItem, BrandingConfig, BrandingTheme } from '../types';
-import { Download, Printer, Copy, Check, FileText, Lock, Sparkles, Building2, User2, MailCheck, ZoomIn, ZoomOut } from 'lucide-react';
+import { Download, Printer, Copy, Check, FileText, FileCheck2, Lock, Sparkles, Building2, User2, MailCheck, ZoomIn, ZoomOut } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -161,6 +161,7 @@ export default function PDFPreview({
     return 1.0;
   });
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
+  const isProposal = config.documentType === 'proposal';
 
   // Currency configuration
   const currencySymbol = config.currencySymbol || '₱';
@@ -514,6 +515,36 @@ export default function PDFPreview({
                 Fit
               </button>
             </div>
+
+            {/* Document Mode Toggle (Final Receipt vs Proposal) */}
+            <div className="flex items-center bg-zinc-200/90 p-0.5 rounded-xl border border-zinc-300 shadow-sm" id="pdf-doc-mode-toggle">
+              <button
+                type="button"
+                onClick={() => onUpdateConfig({ documentType: 'receipt' })}
+                className={`px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer ${
+                  !isProposal
+                    ? 'bg-white text-zinc-900 shadow-sm font-extrabold'
+                    : 'text-zinc-600 hover:text-zinc-900'
+                }`}
+                title="Final Receipt: No price lock guarantee, treated as official final receipt"
+              >
+                <FileCheck2 className="h-3 w-3 text-emerald-600" />
+                <span>Final Receipt</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onUpdateConfig({ documentType: 'proposal' })}
+                className={`px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer ${
+                  isProposal
+                    ? 'bg-white text-indigo-950 shadow-sm font-extrabold'
+                    : 'text-zinc-600 hover:text-zinc-900'
+                }`}
+                title="Proposal Mode: Enables Price Lock Guarantee & Expiry Validity"
+              >
+                <FileText className="h-3 w-3 text-indigo-600" />
+                <span>Proposal</span>
+              </button>
+            </div>
           </div>
 
           {mode === 'generate' ? (
@@ -591,12 +622,14 @@ export default function PDFPreview({
                 {/* Doc Title & Meta details */}
                 <div className="text-right">
                   <h2 className={`${currentStyle.fontHeader} font-black text-2xl tracking-widest uppercase mb-1 ${currentStyle.headerBoldText}`}>
-                    QUOTATION
+                    {isProposal ? 'PROJECT PROPOSAL' : 'FINAL RECEIPT'}
                   </h2>
                   <div className={`flex flex-col gap-0.5 text-[9px] font-mono tracking-tight ${currentStyle.headerMetaText}`}>
-                    <p>Doc ID: <span className={currentStyle.headerBoldText}>{config.quoteNumber}</span></p>
+                    <p>{isProposal ? 'Proposal ID:' : 'Receipt ID:'} <span className={currentStyle.headerBoldText}>{config.quoteNumber}</span></p>
                     <p>Issue Date: <span className={currentStyle.headerBoldText}>{config.issueDate}</span></p>
-                    <p>Expires On: <span className={currentStyle.headerBoldText}>{config.expiryDate}</span></p>
+                    {isProposal && (
+                      <p>Expires On: <span className={currentStyle.headerBoldText}>{config.expiryDate}</span></p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -753,13 +786,15 @@ export default function PDFPreview({
 
                 <div className="flex flex-col gap-1.5 text-[9.5px]">
                   <p className={`leading-relaxed text-[9.5px] font-medium ${currentStyle.bodyText}`}>
-                    {config.notes ? config.notes.trim() : "50% upfront deposit required. Remainder due upon visual acceptance & final project delivery."}
+                    {config.notes ? config.notes.trim() : (isProposal ? "50% upfront deposit required. Remainder due upon visual acceptance & final project delivery." : "Payment received & confirmed. Official final receipt.")}
                   </p>
 
-                  <div className="flex justify-between items-center text-[9px] pt-1 mt-1">
-                    <span className={`font-mono text-[8px] uppercase tracking-wider ${currentStyle.mutedText}`}>PRICE LOCK GUARANTEE:</span>
-                    <span className={`font-mono font-bold ${currentStyle.boldText}`}>Valid to {config.expiryDate}</span>
-                  </div>
+                  {isProposal && (
+                    <div className="flex justify-between items-center text-[9px] pt-1 mt-1 border-t border-dashed border-current/15">
+                      <span className={`font-mono text-[8px] uppercase tracking-wider ${currentStyle.mutedText}`}>PRICE LOCK GUARANTEE:</span>
+                      <span className={`font-mono font-bold ${currentStyle.boldText}`}>Valid to {config.expiryDate}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className={`text-[8px] ${currentStyle.mutedText} pt-1 mt-0.5 leading-tight`}>
@@ -788,13 +823,17 @@ export default function PDFPreview({
                   )}
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-1 gap-1 text-right" id="final-total">
-                  <span className={`${currentStyle.fontHeader} font-black text-[9px] sm:text-xs uppercase tracking-widest ${currentStyle.boldText} text-left sm:text-right`}>TOTAL ESTIMATED AMOUNT:</span>
+                  <span className={`${currentStyle.fontHeader} font-black text-[9px] sm:text-xs uppercase tracking-widest ${currentStyle.boldText} text-left sm:text-right`}>
+                    {isProposal ? 'TOTAL ESTIMATED AMOUNT:' : 'TOTAL AMOUNT:'}
+                  </span>
                   <span className={`font-mono font-extrabold text-xs sm:text-sm ${currentStyle.boldText} shrink-0`}>
                     {currencySymbol}{Math.round(totalAmount).toLocaleString()}
                   </span>
                 </div>
                 <div className={`mt-1 text-[8px] ${currentStyle.mutedText} leading-none`}>
-                  Calculated automatically. Sum representation in {currencyName} ({currencyCode}).
+                  {isProposal
+                    ? `Calculated automatically. Sum representation in ${currencyName} (${currencyCode}).`
+                    : `Settlement confirmed. Sum representation in ${currencyName} (${currencyCode}).`}
                 </div>
               </div>
             </div>

@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrandingConfig, BrandingTheme } from '../types';
-import { Palette, Check, Cpu, Terminal, Shield, Zap, Building2, MapPin, Mail, Globe, FileText, Sparkles, Eye, Coins } from 'lucide-react';
+import { Palette, Check, Cpu, Terminal, Shield, Zap, Building2, MapPin, Mail, Globe, FileText, Sparkles, Eye, Coins, FileCheck2, Calendar } from 'lucide-react';
 import GlassSelect from './GlassSelect';
 import { PRESET_CURRENCIES } from '../data/currencies';
+import { getLocalTodayDate, getLocalFutureDate } from '../utils/dateUtils';
 
 interface PDFDesignPanelProps {
   config: BrandingConfig;
@@ -92,6 +93,7 @@ export default function PDFDesignPanel({
     }
   ];
 
+  const isProposal = config.documentType === 'proposal';
   const currencySymbol = config.currencySymbol || '₱';
   const currentCurrency = config.currency || 'PHP';
   const isCustomCurrency = currentCurrency === 'CUSTOM' || (!PRESET_CURRENCIES.some((c) => c.code === currentCurrency) && currentCurrency !== 'PHP');
@@ -257,16 +259,166 @@ export default function PDFDesignPanel({
               )}
             </div>
           </div>
+
+          {/* Document Mode Selector Card */}
+          <div className="flex flex-col gap-2 sm:col-span-2 p-3.5 rounded-2xl glass-panel border border-white/10 bg-white/02">
+            <div className="flex items-center justify-between">
+              <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/60 flex items-center gap-1.5">
+                {isProposal ? (
+                  <FileText className="h-3.5 w-3.5 text-indigo-400" />
+                ) : (
+                  <FileCheck2 className="h-3.5 w-3.5 text-emerald-400" />
+                )}
+                <span>Document Mode & Purpose</span>
+              </label>
+              <span className="text-[9px] font-mono font-bold text-white/50">
+                {isProposal ? 'PROPOSAL (PRICE LOCK ACTIVE)' : 'FINAL RECEIPT (NO EXPIRY)'}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => onUpdateConfig({ documentType: 'receipt' })}
+                className={`p-3 rounded-xl border text-left transition flex items-center gap-3 cursor-pointer ${
+                  !isProposal
+                    ? 'border-emerald-400/50 bg-emerald-500/10 shadow-lg'
+                    : 'border-white/08 hover:border-white/20 bg-white/03'
+                }`}
+              >
+                <div className={`p-2 rounded-lg ${!isProposal ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/05 text-white/40'}`}>
+                  <FileCheck2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h5 className="font-bold text-xs text-white">Final Receipt (Default)</h5>
+                  <p className="text-[9.5px] text-white/40 mt-0.5">No price lock guarantee. Confirmed final receipt.</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const today = config.issueDate || getLocalTodayDate();
+                  onUpdateConfig({
+                    documentType: 'proposal',
+                    issueDate: today,
+                    expiryDate: config.expiryDate || getLocalFutureDate(30, today)
+                  });
+                }}
+                className={`p-3 rounded-xl border text-left transition flex items-center gap-3 cursor-pointer ${
+                  isProposal
+                    ? 'border-indigo-400/50 bg-indigo-500/10 shadow-lg'
+                    : 'border-white/08 hover:border-white/20 bg-white/03'
+                }`}
+              >
+                <div className={`p-2 rounded-lg ${isProposal ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/05 text-white/40'}`}>
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div>
+                  <h5 className="font-bold text-xs text-white">Project Proposal</h5>
+                  <p className="text-[9.5px] text-white/40 mt-0.5">Enables Price Lock Guarantee & Expiry Validity.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Document ID & Dates Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:col-span-2 p-3.5 rounded-2xl glass-panel border border-white/10 bg-white/02">
+            {/* Document ID */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50">
+                {isProposal ? 'Proposal ID' : 'Receipt ID'}
+              </label>
+              <input
+                type="text"
+                value={config.quoteNumber || ''}
+                onChange={(e) => onUpdateConfig({ quoteNumber: e.target.value })}
+                className="w-full font-mono text-xs text-white glass-input bg-white/05 border border-white/12 px-3 py-2 rounded-xl outline-none focus:border-white/30"
+              />
+            </div>
+
+            {/* Issue Date */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-emerald-400" /> Issue Date
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const today = getLocalTodayDate();
+                    onUpdateConfig({
+                      issueDate: today,
+                      expiryDate: getLocalFutureDate(30, today)
+                    });
+                  }}
+                  className="text-[8px] font-mono uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition cursor-pointer"
+                  title="Set date to Today (Sept 18, 2026)"
+                >
+                  Set Today
+                </button>
+              </div>
+              <input
+                type="date"
+                value={config.issueDate || getLocalTodayDate()}
+                onChange={(e) => {
+                  const newDate = e.target.value;
+                  onUpdateConfig({
+                    issueDate: newDate,
+                    expiryDate: getLocalFutureDate(30, newDate)
+                  });
+                }}
+                className="w-full font-mono text-xs text-white glass-input bg-white/05 border border-white/12 px-3 py-2 rounded-xl outline-none focus:border-white/30"
+              />
+            </div>
+
+            {/* Expiry Date / Price Lock */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50">
+                  {isProposal ? 'Price Lock Expiry' : 'Expiry Status'}
+                </label>
+                {isProposal && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const baseDate = config.issueDate || getLocalTodayDate();
+                      onUpdateConfig({ expiryDate: getLocalFutureDate(30, baseDate) });
+                    }}
+                    className="text-[8px] font-mono uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition cursor-pointer"
+                  >
+                    +30 Days
+                  </button>
+                )}
+              </div>
+              {isProposal ? (
+                <input
+                  type="date"
+                  value={config.expiryDate || getLocalFutureDate(30, config.issueDate)}
+                  onChange={(e) => onUpdateConfig({ expiryDate: e.target.value })}
+                  className="w-full font-mono text-xs text-white glass-input bg-indigo-950/20 border border-indigo-500/30 px-3 py-2 rounded-xl outline-none focus:border-indigo-400"
+                />
+              ) : (
+                <div className="h-[38px] flex items-center px-3 rounded-xl bg-white/03 border border-white/08 text-[10px] font-mono text-white/30">
+                  No Expiry (Final Receipt)
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Payment Terms & Conditions */}
         <div className="flex flex-col gap-1.5 pt-1">
           <label className="text-[9px] font-mono font-bold uppercase tracking-wider text-white/50 flex items-center gap-1">
-            <FileText className="h-3 w-3 text-emerald-400" /> Payment Terms & Studio Conditions (Rendered in PDF Summary Box)
+            <FileText className="h-3 w-3 text-emerald-400" /> Payment Terms & Settlement Notes
           </label>
           <textarea
             rows={3}
-            placeholder="e.g. 50% upfront deposit required. Remainder due upon visual acceptance & final project delivery."
+            placeholder={
+              isProposal
+                ? "e.g. 50% upfront deposit required. Remainder due upon visual acceptance & final project delivery."
+                : "e.g. Payment received & settled in full. Official final receipt."
+            }
             value={config.notes || ''}
             onChange={(e) => onUpdateConfig({ notes: e.target.value })}
             className="w-full text-xs text-white/80 glass-input bg-white/03 border border-white/10 focus:border-white/25 px-3.5 py-2.5 rounded-xl transition-all placeholder:text-white/25 outline-none resize-none min-h-[60px] leading-relaxed shadow-inner"

@@ -42,6 +42,7 @@ export interface BrandingConfig {
   currency?: string; // Currency code, e.g. 'PHP', 'USD', 'EUR'
   currencySymbol?: string; // Currency symbol, e.g. '₱', '$', '€'
   currencyName?: string; // Currency full name, e.g. 'Philippine Peso'
+  documentType?: 'receipt' | 'proposal'; // 'receipt' is default ("Final Receipt"), 'proposal' is Proposal with Price Lock Guarantee
 }
 
 export interface SavedQuote {
