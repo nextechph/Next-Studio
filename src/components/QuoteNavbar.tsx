@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, FileCheck2, Calculator } from 'lucide-react';
+import { Sparkles, FileCheck2, Calculator, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import NextLogo from './NextLogo';
 
@@ -9,6 +9,7 @@ interface NavbarProps {
   totalAmount: number;
   itemCount: number;
   onCompilePDF: () => void;
+  onStartNewQuote?: () => void;
   activePanel?: string;
   currencySymbol?: string;
 }
@@ -19,6 +20,7 @@ export default function QuoteNavbar({
   totalAmount,
   itemCount,
   onCompilePDF,
+  onStartNewQuote,
   activePanel,
   currencySymbol = '₱'
 }: NavbarProps) {
@@ -70,6 +72,18 @@ export default function QuoteNavbar({
 
         {/* Right: actions */}
         <div className="flex items-center gap-2" id="navbar-actions">
+          {onStartNewQuote && (
+            <button
+              type="button"
+              onClick={onStartNewQuote}
+              className="text-[10px] font-bold uppercase tracking-wider text-white/60 hover:text-white px-3 py-2 rounded-xl hover:bg-white/06 border border-white/10 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Start a fresh quotation (auto-saves current work to history)"
+            >
+              <Plus className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">New Quote</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onCompilePDF}

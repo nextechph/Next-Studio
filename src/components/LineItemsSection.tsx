@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { QuotationItem, BrandingConfig } from '../types';
 import { SERVICE_PRESETS, ServicePreset } from '../data/presets';
-import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers, Check, Coins, FileCheck2, FileText, Calendar } from 'lucide-react';
+import { Plus, Trash2, Tag, Percent, Receipt, Sparkles, Filter, Layers, Check, Coins, FileCheck2, FileText, Calendar, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import GlassSelect from './GlassSelect';
 import { PRESET_CURRENCIES } from '../data/currencies';
@@ -309,6 +309,29 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
             </div>
           </div>
         </div>
+
+        {/* Notice if student mode has leftover deliverables from previous project */}
+        {clientType === 'student' && items.some(item => !STUDENT_ADDONS.some(a => a.id === item.id)) && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-panel border-amber-500/30 bg-amber-500/08 text-amber-300 p-3.5 rounded-2xl text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg"
+          >
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-amber-400" />
+              <span>
+                You have {items.length} deliverables retained from a previous business project.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onUpdateItems([])}
+              className="px-3.5 py-1.5 bg-amber-400 text-black font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-amber-300 transition cursor-pointer shrink-0 shadow-md"
+            >
+              Clear & Start Fresh
+            </button>
+          </motion.div>
+        )}
 
         {/* Empty State Banner (Liquid Glass) */}
         {filteredItems.length === 0 ? (

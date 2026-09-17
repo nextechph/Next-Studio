@@ -8,7 +8,7 @@ import QuotationHistory from './components/QuotationHistory';
 import NextLogo from './components/NextLogo';
 import {
   Sparkles, User, Briefcase, Palette, History,
-  FileCheck2, X, CheckCircle2, Circle, Calendar, Clock, Tag, Eye
+  FileCheck2, X, CheckCircle2, Circle, Calendar, Clock, Tag, Eye, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'motion/react';
 
@@ -165,6 +165,38 @@ export default function App() {
     config: { ...config }, totalAmount: total, createdAt: new Date().toISOString(),
   }, ...p]);
 
+  const handleUpdateClient = (fields: Partial<ClientDetails>) => {
+    if (fields.clientType && fields.clientType !== client.clientType) {
+      if (items.length > 0) {
+        // Auto-save snapshot of the previous project so no work is lost
+        saveSnap();
+        // Clear items so the newly chosen project category starts fresh
+        setItems([]);
+      }
+    }
+    setClient((prev) => ({ ...prev, ...fields }));
+  };
+
+  const handleStartNewQuote = () => {
+    if (items.length > 0 || client.name.trim()) {
+      saveSnap();
+    }
+    setClient({
+      name: '', contactNumber: '', email: '', companyName: '', address: '',
+      projectDescription: '', clientType: client.clientType || 'student',
+      professionalTier: 'starter', basePrice: 0, targetTimeline: 'standard',
+    });
+    setItems([]);
+    const today = getLocalTodayDate();
+    setConfig((prev) => ({
+      ...prev,
+      quoteNumber: `NT-2026-${Math.floor(Math.random() * 9000 + 1000)}`,
+      issueDate: today,
+      expiryDate: getLocalFutureDate(30, today),
+    }));
+    setActivePanel('client');
+  };
+
   const handleGenerate = () => {
     if (!isValid) { setShowValidation(true); setActivePanel('client'); return; }
     setPdfModalMode('generate');
@@ -257,8 +289,17 @@ export default function App() {
           <div className="flex flex-col gap-2.5">
             <button
               type="button"
+              onClick={handleStartNewQuote}
+              className="glass-btn-ghost w-full py-2.5 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer border border-white/10 text-white/70 hover:text-white hover:bg-white/06 shadow-sm"
+              id="sidebar-new-quote-btn"
+              title="Start a fresh quotation (auto-saves current draft to history)"
+            >
+              <Plus className="h-3.5 w-3.5 text-emerald-400" /> New Quotation
+            </button>
+            <button
+              type="button"
               onClick={saveSnap}
-              className="glass-btn-ghost w-full py-3 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer border border-white/10 text-white/50 hover:text-white"
+              className="glass-btn-ghost w-full py-2.5 rounded-2xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer border border-white/10 text-white/50 hover:text-white"
               id="sidebar-save-draft-btn"
             >
               Save Draft
@@ -325,7 +366,7 @@ export default function App() {
                 {activePanel === 'client' && (
                   <ClientDetailsForm
                     details={client}
-                    onUpdate={(f) => setClient((prev) => ({ ...prev, ...f }))}
+                    onUpdate={handleUpdateClient}
                     showValidationErrors={showValidation}
                   />
                 )}
