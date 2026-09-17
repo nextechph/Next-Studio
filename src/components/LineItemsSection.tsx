@@ -8,15 +8,15 @@ import { PRESET_CURRENCIES } from '../data/currencies';
 import { getLocalTodayDate, getLocalFutureDate } from '../utils/dateUtils';
 
 const STUDENT_ADDONS = [
-  { id: 'addon-additional-page', title: 'Additional Page', price: 1000, category: 'Development', description: 'Additional tailored content page with fully styled sections.' },
-  { id: 'addon-contact-form', title: 'Contact Form', price: 500, category: 'Development', description: 'Interactive contact submission form block with field validations.' },
-  { id: 'addon-portfolio-gallery', title: 'Portfolio / Gallery Section', price: 1500, category: 'Design', description: 'Rich visual responsive grid for showcase assets with hover effects.' },
-  { id: 'addon-blog-setup', title: 'Blog Setup', price: 1000, category: 'Development', description: 'Dynamic list view with simplified text template layouts for posts.' },
-  { id: 'addon-animations', title: 'Animations & Interactions', price: 1000, category: 'Design', description: 'Smooth fluid entry animations, hover actions, and page transitions.' },
-  { id: 'addon-domain-setup', title: 'Custom Domain Setup', price: 700, category: 'Consulting', description: 'Domain routing, SSL setup, and production hosting configuration.' },
-  { id: 'addon-logo-branding', title: 'Logo / Branding Design', price: 2500, category: 'Design', description: 'Curated custom professional emblem drafts and brand guide.' },
-  { id: 'addon-extra-revision', title: 'Extra Revision Round', price: 800, category: 'Consulting', description: 'One additional iteration feedback review cycle.' },
-  { id: 'addon-rush-delivery', title: 'Rush Delivery (under 2 weeks)', price: 2500, category: 'Consulting', description: 'Accelerated prioritised execution with high feedback velocity.' }
+  { id: 'addon-additional-page', title: 'Additional Page', category: 'Development', description: 'Additional tailored content page with fully styled sections.' },
+  { id: 'addon-contact-form', title: 'Contact Form', category: 'Development', description: 'Interactive contact submission form block with field validations.' },
+  { id: 'addon-portfolio-gallery', title: 'Portfolio / Gallery Section', category: 'Design', description: 'Rich visual responsive grid for showcase assets with hover effects.' },
+  { id: 'addon-blog-setup', title: 'Blog Setup', category: 'Development', description: 'Dynamic list view with simplified text template layouts for posts.' },
+  { id: 'addon-animations', title: 'Animations & Interactions', category: 'Design', description: 'Smooth fluid entry animations, hover actions, and page transitions.' },
+  { id: 'addon-domain-setup', title: 'Custom Domain Setup', category: 'Consulting', description: 'Domain routing, SSL setup, and production hosting configuration.' },
+  { id: 'addon-logo-branding', title: 'Logo / Branding Design', category: 'Design', description: 'Curated custom professional emblem drafts and brand guide.' },
+  { id: 'addon-extra-revision', title: 'Extra Revision Round', category: 'Consulting', description: 'One additional iteration feedback review cycle.' },
+  { id: 'addon-rush-delivery', title: 'Rush Delivery (under 2 weeks)', category: 'Consulting', description: 'Accelerated prioritised execution with high feedback velocity.' }
 ];
 
 interface LineItemsProps {
@@ -103,7 +103,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
         id: `preset-${preset.id}-${i}-${Date.now()}`,
         title: pi.title,
         description: pi.description,
-        unitPrice: pi.unitPrice,
+        unitPrice: 0,
         quantity: pi.quantity,
         category: pi.category,
       })),
@@ -123,7 +123,8 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {STUDENT_ADDONS.map((addon, i) => {
-              const isChecked = items.some((item) => item.id === addon.id);
+              const existingItem = items.find((item) => item.id === addon.id);
+              const isChecked = Boolean(existingItem);
               const toggleAddon = () => {
                 if (isChecked) {
                   onUpdateItems(items.filter((item) => item.id !== addon.id));
@@ -134,7 +135,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
                       id: addon.id,
                       title: addon.title,
                       description: addon.description,
-                      unitPrice: addon.price,
+                      unitPrice: 0,
                       quantity: 1,
                       category: addon.category,
                     },
@@ -182,14 +183,31 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
                       </AnimatePresence>
                     </motion.div>
 
-                    <span className={`text-xs font-semibold transition-colors ${isChecked ? 'text-white font-bold' : 'text-white/70'}`}>
-                      {addon.title}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className={`text-xs font-semibold transition-colors ${isChecked ? 'text-white font-bold' : 'text-white/70'}`}>
+                        {addon.title}
+                      </span>
+                      <span className="text-[9px] text-white/30 truncate max-w-[140px] sm:max-w-[180px]">
+                        {addon.category}
+                      </span>
+                    </div>
                   </div>
 
-                  <span className={`font-mono text-xs font-bold transition-colors ${isChecked ? 'text-white font-extrabold' : 'text-white/50'}`}>
-                    +{currencySymbol}{addon.price.toLocaleString()}
-                  </span>
+                  {isChecked ? (
+                    existingItem && existingItem.unitPrice > 0 ? (
+                      <span className="font-mono text-xs font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
+                        +{currencySymbol}{existingItem.unitPrice.toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[9px] font-bold text-white/60 bg-white/08 border border-white/10 px-2 py-0.5 rounded-lg">
+                        Declare Rate
+                      </span>
+                    )
+                  ) : (
+                    <span className="font-mono text-[9px] text-white/30 uppercase tracking-wider">
+                      + Add
+                    </span>
+                  )}
                 </motion.div>
               );
             })}
@@ -228,9 +246,9 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
 
                 <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
                   <div className="flex flex-col leading-none">
-                    <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Package Total</span>
-                    <span className="font-mono text-xs sm:text-sm font-bold text-white mt-0.5">
-                      {currencySymbol}{preset.defaultPrice.toLocaleString()}
+                    <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Included Scope</span>
+                    <span className="font-mono text-xs font-bold text-white mt-0.5">
+                      {preset.items.length} deliverables
                     </span>
                   </div>
 
