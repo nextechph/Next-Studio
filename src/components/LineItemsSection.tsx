@@ -189,7 +189,7 @@ export default function LineItemsSection({ items, config, onUpdateItems, onUpdat
 
                 <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
                   <div className="flex flex-col leading-none">
-                    <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Base Rate</span>
+                    <span className="text-[8px] font-mono text-white/40 uppercase tracking-widest">Package Total</span>
                     <span className="font-mono text-xs sm:text-sm font-bold text-white mt-0.5">
                       ₱{preset.defaultPrice.toLocaleString()}
                     </span>

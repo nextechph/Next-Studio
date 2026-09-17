@@ -163,9 +163,7 @@ export default function PDFPreview({
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
 
   // Totals calculations
-  const basePrice = clientDetails.basePrice || 0;
-  const ledgerSubTotal = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
-  const subtotal = basePrice + ledgerSubTotal;
+  const subtotal = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
   const discountAmount = (config.enableDiscount && config.discount > 0) ? subtotal * (config.discount / 100) : 0;
   const afterDiscount = subtotal - discountAmount;
   const taxAmount = (config.enableTax && config.taxRate > 0) ? afterDiscount * (config.taxRate / 100) : 0;
@@ -767,26 +765,10 @@ export default function PDFPreview({
               {/* RIGHT CARD: TOTALS CALCULATION BREAKDOWN */}
               <div className={`w-full flex flex-col gap-2 text-right leading-relaxed p-4 rounded-xl border ${currentStyle.borderLineSubtle} ${currentStyle.badgeBg} ${currentStyle.bodyText} shadow-sm`}>
                 <div className="pb-2 flex flex-col gap-1.5">
-                  {basePrice > 0 && (
-                    <div className={`flex justify-between items-center ${currentStyle.bodyText}`}>
-                      <span className="uppercase tracking-wider text-[8px]">
-                        {clientDetails.clientType === 'student' ? 'Base Project Fee (Student):' : `Base Project Fee (${clientDetails.professionalTier === 'enterprise' ? 'Enterprise' : clientDetails.professionalTier === 'growth' ? 'Growth' : 'Starter'}):`}
-                      </span>
-                      <span className="font-mono">₱{basePrice.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {ledgerSubTotal > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="uppercase tracking-wider text-[8px]">LEDGER ITEMS SUB-SUM:</span>
-                      <span className="font-mono font-medium">₱{ledgerSubTotal.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {basePrice > 0 && ledgerSubTotal > 0 && (
-                    <div className={`flex justify-between items-center ${currentStyle.mutedText} pt-1 mt-1`}>
-                      <span className="uppercase tracking-wider text-[8px]">COMBINED SUB-SUMS:</span>
-                      <span className="font-mono">₱{subtotal.toLocaleString()}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="uppercase tracking-wider text-[8px]">SUBTOTAL:</span>
+                    <span className="font-mono font-medium">₱{subtotal.toLocaleString()}</span>
+                  </div>
                   {config.enableDiscount && config.discount > 0 && (
                     <div className="flex justify-between items-center text-emerald-700">
                       <span className="uppercase tracking-wider text-[8px] text-emerald-700">Studio Discount ({config.discount}%):</span>

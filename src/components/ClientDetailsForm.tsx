@@ -44,7 +44,7 @@ function TiltCard({ children, className, onClick, isSelected }: {
       whileHover={{ scale: 1.02, translateZ: 8 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className={`text-left cursor-pointer relative overflow-hidden flex flex-col justify-between h-36 rounded-3xl p-5 glass-panel ${
+      className={`text-left cursor-pointer relative overflow-hidden flex flex-col justify-between min-h-[110px] rounded-3xl p-5 glass-panel ${
         isSelected
           ? 'border-2 border-white/30 bg-white/10'
           : 'border border-white/06'
@@ -205,12 +205,12 @@ export default function ClientDetailsForm({ details, onUpdate, showValidationErr
       >
         <div>
           <h3 className="text-sm font-bold text-white/70">What type of client is this?</h3>
-          <p className="text-xs text-white/25 mt-1">This sets the starting price for the project.</p>
+          <p className="text-xs text-white/25 mt-1">Select the client category for this quotation.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Academic */}
-          <TiltCard onClick={() => onUpdate({ clientType: 'student', basePrice: 2500, professionalTier: undefined })} isSelected={details.clientType === 'student'}>
+          <TiltCard onClick={() => onUpdate({ clientType: 'student', basePrice: 0, professionalTier: undefined })} isSelected={details.clientType === 'student'}>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-white/06 text-white/50">
@@ -228,16 +228,12 @@ export default function ClientDetailsForm({ details, onUpdate, showValidationErr
                 />
               )}
             </div>
-            <p className="text-xs text-white/25 line-clamp-2 leading-relaxed">For thesis, capstone, or personal portfolio projects.</p>
-            <div className="flex items-baseline justify-between pt-2 border-t border-white/06">
-              <span className="text-[10px] uppercase font-bold text-white/25">Starting at:</span>
-              <span className="font-mono text-base font-extrabold text-white/70">₱2,500</span>
-            </div>
+            <p className="text-xs text-white/35 line-clamp-2 leading-relaxed mt-2.5">For thesis, capstone, or personal portfolio projects.</p>
           </TiltCard>
 
           {/* Professional */}
           <TiltCard
-            onClick={() => onUpdate({ clientType: 'professional', professionalTier: details.professionalTier || 'starter', basePrice: details.professionalTier === 'enterprise' ? 60000 : details.professionalTier === 'growth' ? 30000 : 10000 })}
+            onClick={() => onUpdate({ clientType: 'professional', professionalTier: details.professionalTier || 'starter', basePrice: 0 })}
             isSelected={details.clientType === 'professional'}
           >
             <div className="flex items-start justify-between">
@@ -257,13 +253,7 @@ export default function ClientDetailsForm({ details, onUpdate, showValidationErr
                 />
               )}
             </div>
-            <p className="text-xs text-white/25 line-clamp-2 leading-relaxed">For businesses, startups, and agencies needing a professional website or app.</p>
-            <div className="flex items-baseline justify-between pt-2 border-t border-white/06">
-              <span className="text-[10px] uppercase font-bold text-white/25">Starting at:</span>
-              <span className="font-mono text-base font-extrabold text-white/70">
-                ₱{(() => { if (details.clientType !== 'professional') return 10000; const t = details.professionalTier; return t === 'enterprise' ? 60000 : t === 'growth' ? 30000 : 10000; })().toLocaleString()}
-              </span>
-            </div>
+            <p className="text-xs text-white/35 line-clamp-2 leading-relaxed mt-2.5">For businesses, startups, and agencies needing a professional website or app.</p>
           </TiltCard>
         </div>
 
@@ -280,13 +270,13 @@ export default function ClientDetailsForm({ details, onUpdate, showValidationErr
             >
               <div>
                 <h5 className="text-sm font-bold text-white/60">How big is the project?</h5>
-                <p className="text-xs text-white/30 mt-0.5">Choose a budget range that fits your client's scope.</p>
+                <p className="text-xs text-white/30 mt-0.5">Choose the project scope that fits your client's requirements.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
-                  { id: 'starter',    label: 'Starter',    price: 10000, range: '₱10k–₱30k',  desc: 'Small websites, landing pages, lightweight MVPs.' },
-                  { id: 'growth',     label: 'Growth',     price: 30000, range: '₱30k–₱60k',  desc: 'Custom platforms, dashboards, multi-page web apps.', popular: true },
-                  { id: 'enterprise', label: 'Enterprise', price: 60000, range: '₱60k+',       desc: 'Complex systems, full-stack enterprise applications.' },
+                  { id: 'starter',    label: 'Starter',    desc: 'Small websites, landing pages, lightweight MVPs.' },
+                  { id: 'growth',     label: 'Growth',     desc: 'Custom platforms, dashboards, multi-page web apps.', popular: true },
+                  { id: 'enterprise', label: 'Enterprise', desc: 'Complex systems, full-stack enterprise applications.' },
                 ].map((tier, i) => (
                   <motion.button
                     key={tier.id}
@@ -296,8 +286,8 @@ export default function ClientDetailsForm({ details, onUpdate, showValidationErr
                     transition={{ delay: i * 0.07 }}
                     whileHover={{ scale: 1.03, translateY: -2 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => onUpdate({ professionalTier: tier.id as any, basePrice: tier.price })}
-                    className={`p-4 rounded-2xl text-left glass-panel-interactive transition-all cursor-pointer flex flex-col gap-2 relative ${
+                    onClick={() => onUpdate({ professionalTier: tier.id as any, basePrice: 0 })}
+                    className={`p-4 rounded-2xl text-left glass-panel-interactive transition-all cursor-pointer flex flex-col justify-between gap-3 relative ${
                       details.professionalTier === tier.id
                         ? 'border-2 border-white/25 bg-white/08'
                         : 'border border-white/06'
@@ -307,13 +297,12 @@ export default function ClientDetailsForm({ details, onUpdate, showValidationErr
                       <span className="absolute -top-2.5 right-3 bg-white text-black text-[8px] font-extrabold px-2 py-0.5 rounded-full tracking-wider shadow-md">POPULAR</span>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-bold tracking-wider uppercase text-white/35">{tier.label}</span>
+                      <span className="text-[10px] font-bold tracking-wider uppercase text-white/70">{tier.label}</span>
                       {details.professionalTier === tier.id && (
-                        <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-2 w-2 rounded-full bg-white/60" />
+                        <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="h-2 w-2 rounded-full bg-white/80 shadow-sm shadow-white/50" />
                       )}
                     </div>
-                    <span className="font-mono text-sm font-extrabold text-white">{tier.range}</span>
-                    <p className="text-[11px] text-white/30 leading-normal">{tier.desc}</p>
+                    <p className="text-xs text-white/35 leading-relaxed">{tier.desc}</p>
                   </motion.button>
                 ))}
               </div>

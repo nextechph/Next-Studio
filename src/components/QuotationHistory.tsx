@@ -68,7 +68,7 @@ export default function QuotationHistory({ history, onLoadQuote, onDeleteQuote, 
           whileTap={{ scale: 0.97 }}
           className="glass-btn-primary py-3 px-6 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg self-start sm:self-auto"
         >
-          <PlusCircle className="h-4 w-4" /> Save Snapshot
+          <PlusCircle className="h-4 w-4" /> Save Workspace
         </motion.button>
       </motion.div>
 
@@ -255,7 +255,7 @@ export default function QuotationHistory({ history, onLoadQuote, onDeleteQuote, 
           </div>
           <motion.button type="button" onClick={handleManualSnapshot} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
             className="glass-btn-primary py-3 px-8 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-lg">
-            <PlusCircle className="h-4 w-4" /> Snapshot Current Workspace
+            <PlusCircle className="h-4 w-4" /> Save Workspace
           </motion.button>
         </motion.div>
       )}

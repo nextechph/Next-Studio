@@ -16,7 +16,7 @@ import { motion, AnimatePresence, useSpring, useMotionValue } from 'motion/react
 const DEFAULT_CLIENT: ClientDetails = {
   name: '', contactNumber: '', email: '', companyName: '', address: '',
   projectDescription: '', clientType: 'professional', professionalTier: 'starter',
-  basePrice: 10000, targetTimeline: 'standard',
+  basePrice: 0, targetTimeline: 'standard',
 };
 
 const DEFAULT_ITEMS: QuotationItem[] = [];
@@ -92,7 +92,8 @@ export default function App() {
     const s = localStorage.getItem('next_quote_client');
     if (s) {
       const p = JSON.parse(s);
-      if (!p.clientType) { p.clientType = 'professional'; p.professionalTier = 'starter'; p.basePrice = 10000; }
+      if (!p.clientType) { p.clientType = 'professional'; p.professionalTier = 'starter'; }
+      p.basePrice = 0;
       if (!p.targetTimeline) p.targetTimeline = 'standard';
       return p;
     }
@@ -137,7 +138,7 @@ export default function App() {
   const hasDiscount = config.enableDiscount ?? false;
   const hasTax      = config.enableTax ?? false;
 
-  const sub   = (client.basePrice || 0) + items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
+  const sub   = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const disc  = hasDiscount ? sub * (config.discount / 100) : 0;
   const tax   = hasTax ? (sub - disc) * (config.taxRate / 100) : 0;
   const total = Math.round(sub - disc + tax);
@@ -416,7 +417,7 @@ export default function App() {
                 {hasTax && <span>{config.taxRate}% tax</span>}
               </div>
             ) : (
-              <div className="text-[10px] font-mono text-white/25 mt-1">Net Base Total</div>
+              <div className="text-[10px] font-mono text-white/25 mt-1">Net Total</div>
             )}
           </div>
 
